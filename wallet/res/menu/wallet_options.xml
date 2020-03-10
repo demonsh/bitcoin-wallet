@@ -84,5 +84,19 @@
         android:orderInCategory="999"
         android:showAsAction="never"
         android:title="@string/button_help"/>
+    <item
+        android:showAsAction="never"
+        android:title="@string/inheritance_menu">
+        <menu>
+            <item
+                android:id="@+id/wallet_inheritance_owner"
+                android:showAsAction="never"
+                android:title="@string/inheritance_menu_owner"/>
+            <item
+                android:id="@+id/wallet_inheritance_heir"
+                android:showAsAction="never"
+                android:title="@string/inheritance_menu_heir"/>
+        </menu>
+    </item>
 
 </menu>

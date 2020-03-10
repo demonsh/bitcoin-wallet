@@ -188,6 +188,12 @@
             android:theme="@style/My.Theme.ChildActivity"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name="de.schildbach.wallet.ui.InheritanceActivity"
+            android:label="@string/inheritance_activity_title"
+            android:theme="@style/My.Theme.ChildActivity" />
+
+
         <provider
             android:name="de.schildbach.wallet.data.ExchangeRatesProvider"
             android:authorities="${applicationId}.exchange_rates"
