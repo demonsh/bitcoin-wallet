@@ -6,13 +6,10 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -22,26 +19,17 @@ import android.widget.ImageView;
 import android.widget.ListView;
 
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.LegacyAddress;
-import org.bitcoinj.core.PrefixedChecksummedBytes;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.PaymentIntent;
 import de.schildbach.wallet.ui.scan.ScanActivity;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
-import de.schildbach.wallet.ui.send.SweepWalletActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Qr;
 
@@ -52,8 +40,7 @@ public final class InheritanceActivity extends AbstractWalletActivity {
     private View levitateView;
 
     private ArrayList<String> list = new ArrayList<String>();
-    private StableArrayAdapter adapter;
-//    private RecyclerView recyclerViewHeir;
+    private ArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,40 +95,13 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
 
         //TODO: this is tmp imp;
-        adapter = new StableArrayAdapter(this,
+        adapter = new ArrayAdapter(this,
                 android.R.layout.simple_list_item_1, list);
         listview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
 
     }
-
-    //TODO: this is tmp impl
-    private class StableArrayAdapter extends ArrayAdapter<String> {
-
-        HashMap<String, Integer> mIdMap = new HashMap<String, Integer>();
-
-        public StableArrayAdapter(Context context, int textViewResourceId,
-                                  List<String> objects) {
-            super(context, textViewResourceId, objects);
-            for (int i = 0; i < objects.size(); ++i) {
-                mIdMap.put(objects.get(i), i);
-            }
-        }
-
-        @Override
-        public long getItemId(int position) {
-            String item = getItem(position);
-            return mIdMap.get(item);
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-    }
-
 
     public void handleScan(final View clickView) {
         // The animation must be ended because of several graphical glitching that happens when the
@@ -251,35 +211,12 @@ public final class InheritanceActivity extends AbstractWalletActivity {
     public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         if (requestCode == 0) {
             if (resultCode == Activity.RESULT_OK) {
+
+                //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
                 adapter.add(input);
                 adapter.notifyDataSetChanged();
-
-//                new InputParser.StringInputParser(input) {
-//                    @Override
-//                    protected void handlePaymentIntent(final PaymentIntent paymentIntent) {
-//                        SendCoinsActivity.start(WalletActivity.this, paymentIntent);
-//                    }
-//
-//                    @Override
-//                    protected void handlePrivateKey(final PrefixedChecksummedBytes key) {
-//                        if (Constants.ENABLE_SWEEP_WALLET)
-//                            SweepWalletActivity.start(WalletActivity.this, key);
-//                        else
-//                            super.handlePrivateKey(key);
-//                    }
-//
-//                    @Override
-//                    protected void handleDirectTransaction(final Transaction tx) throws VerificationException {
-//                        application.processDirectTransaction(tx);
-//                    }
-//
-//                    @Override
-//                    protected void error(final int messageResId, final Object... messageArgs) {
-//                        dialog(WalletActivity.this, null, R.string.button_scan, messageResId, messageArgs);
-//                    }
-//                }.parse();
             }
         } else {
             super.onActivityResult(requestCode, resultCode, intent);
