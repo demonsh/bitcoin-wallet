@@ -14,9 +14,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
@@ -99,6 +101,13 @@ public final class InheritanceActivity extends AbstractWalletActivity {
                 android.R.layout.simple_list_item_1, list);
         listview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(InheritanceActivity.this, "Addresss"+list.get(i), Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
     }
