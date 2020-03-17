@@ -465,7 +465,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             startActivity(new Intent(this, InheritanceActivity.class));
         }
         else if( itemId == R.id.wallet_inheritance_heir){
-            startActivity(new Intent(this, InheritanceActivity.class));
+            startActivity(new Intent(this, InheritanceHeirActivity.class));
         }
         return super.onOptionsItemSelected(item);
     }

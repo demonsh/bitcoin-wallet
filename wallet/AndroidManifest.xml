@@ -193,6 +193,11 @@
             android:label="@string/inheritance_activity_title"
             android:theme="@style/My.Theme.ChildActivity" />
 
+        <activity
+            android:name="de.schildbach.wallet.ui.InheritanceHeirActivity"
+            android:label="@string/inheritance_activity_title"
+            android:theme="@style/My.Theme.ChildActivity" />
+
 
         <provider
             android:name="de.schildbach.wallet.data.ExchangeRatesProvider"
