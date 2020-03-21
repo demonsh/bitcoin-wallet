@@ -8,17 +8,29 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.LegacyAddress;
+import org.bitcoinj.uri.BitcoinURI;
+
+import java.util.Locale;
+
+import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
+import de.schildbach.wallet.util.Qr;
 
 /**
  * InheritanceHeirActivity.class
@@ -33,6 +45,14 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
     private AnimatorSet enterAnimation;
     private View contentView;
     private View levitateView;
+
+
+
+    //TODO: find proper name
+    private String heirSignTx;
+
+    private TextView txSign;
+    private TextView txStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +71,35 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1)
             sendQrButton.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.fg_on_dark_bg_network_significant), PorterDuff.Mode.SRC_ATOP);
 
+
+        //tx_sign_by_owner
+        txSign = findViewById(R.id.tx_sign_by_owner);
+        txSign.setText(heirSignTx);
+
+        txStatus = findViewById(R.id.tx_status);
+        //TODO:Get tx Status
+        txStatus.setText("Hold");
+
+        final View sendInheritanceTx = findViewById(R.id.send_inheritance_tx);
+        sendInheritanceTx.setOnClickListener(v->handleSendInheritanceTX(v));
+
+
+        //QR
+
+        final Address address = Address.fromString(Constants.NETWORK_PARAMETERS, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
+        final String addressStr = address.toString();
+        final String addressUri;
+        //if (address instanceof LegacyAddress || addressLabel != null)
+        if (address instanceof LegacyAddress)
+            addressUri = BitcoinURI.convertToBitcoinURI(address, null, addressStr, null);
+        else
+            addressUri = address.toString().toUpperCase(Locale.US);
+
+        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(addressUri));
+        bitmap.setFilterBitmap(false);
+        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
+        imageView.setImageDrawable(bitmap);
+
     }
 
     public void handleScan(final View clickView) {
@@ -58,6 +107,16 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         // Camera/SurfaceView is used while the animation is running.
         enterAnimation.end();
         ScanActivity.startForResult(this, clickView, 0);
+    }
+
+    //TODO:
+    private void handleSendInheritanceTX(View v) {
+
+        //Send tx
+        //TODO: get tx status
+        txStatus.setText("Pending...");
+
+        Toast.makeText(this, "Withdraw inheritance TX", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -68,7 +127,11 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
                 //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
-                System.out.println(input);
+                heirSignTx = input;
+
+                //tx_sign_by_owner
+                txSign.setText(heirSignTx);
+
             }
         } else {
             super.onActivityResult(requestCode, resultCode, intent);

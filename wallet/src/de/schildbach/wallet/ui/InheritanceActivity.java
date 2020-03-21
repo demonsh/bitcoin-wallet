@@ -43,18 +43,17 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
     private ArrayList<String> list = new ArrayList<String>();
     private ArrayAdapter adapter;
+    private String signedTx;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance);
 
-        final Address address = Address.fromString(Constants.NETWORK_PARAMETERS, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
-        final String addressStr = address.toString();
-
         contentView = findViewById(android.R.id.content);
         enterAnimation = buildEnterAnimation(contentView);
-
+//
         levitateView = contentView.findViewWithTag("levitate");
 
 //        final Dialog dialog = new Dialog(activity);
@@ -62,17 +61,6 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 //        dialog.setContentView(R.layout.wallet_address_dialog);
 //        dialog.setCanceledOnTouchOutside(true);
 
-        final String addressUri;
-        //if (address instanceof LegacyAddress || addressLabel != null)
-        if (address instanceof LegacyAddress)
-            addressUri = BitcoinURI.convertToBitcoinURI(address, null, addressStr, null);
-        else
-            addressUri = address.toString().toUpperCase(Locale.US);
-
-        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(addressUri));
-        bitmap.setFilterBitmap(false);
-        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
-        imageView.setImageDrawable(bitmap);
 
 //        imageView.setOnClickListener(v ->
 //                WalletAddressDialogFragment.show(getParentFragmentManager(), address, viewModel.ownName.getValue()););
@@ -110,6 +98,27 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         });
 
 
+
+        final View signBtn = findViewById(R.id.sign_inheritance_tx);
+        signBtn.setOnClickListener(v -> signInheritanceTx(v));
+
+
+    }
+
+    //TODO:
+    private void signInheritanceTx(View v) {
+
+        //TODO:
+        signedTx = "testTX....Z";
+
+
+        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(signedTx));
+        bitmap.setFilterBitmap(false);
+        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
+        imageView.setImageDrawable(bitmap);
+
+
+        Toast.makeText(this, "Sign tx", Toast.LENGTH_SHORT).show();
     }
 
     public void handleScan(final View clickView) {

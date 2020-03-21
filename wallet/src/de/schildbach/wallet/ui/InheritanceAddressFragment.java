@@ -43,7 +43,7 @@ import de.schildbach.wallet.R;
  * @author Andreas Schildbach
  */
 public final class InheritanceAddressFragment extends Fragment {
-    private InheritanceActivity activity;
+    private AbstractWalletActivity activity;
     @Nullable
     private NfcAdapter nfcAdapter;
 
@@ -58,7 +58,7 @@ public final class InheritanceAddressFragment extends Fragment {
     @Override
     public void onAttach(final Context context) {
         super.onAttach(context);
-        this.activity = (InheritanceActivity) context;
+        this.activity = (AbstractWalletActivity) context;
         this.nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
     }
 
