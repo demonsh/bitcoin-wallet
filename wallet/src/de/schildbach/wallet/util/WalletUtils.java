@@ -20,6 +20,7 @@ package de.schildbach.wallet.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -27,7 +28,10 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptError;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.UnreadableWalletException;
@@ -49,6 +53,13 @@ import android.text.Spanned;
 import android.text.SpannedString;
 import android.text.style.TypefaceSpan;
 import androidx.annotation.Nullable;
+
+import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
+import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
+import static org.bitcoinj.script.ScriptOpCodes.OP_DROP;
+import static org.bitcoinj.script.ScriptOpCodes.OP_ELSE;
+import static org.bitcoinj.script.ScriptOpCodes.OP_ENDIF;
+import static org.bitcoinj.script.ScriptOpCodes.OP_IF;
 
 /**
  * @author Andreas Schildbach
@@ -235,5 +246,47 @@ public class WalletUtils {
         if ("com.android.providers.downloads.documents".equals(host))
             return "internal storage";
         return null;
+    }
+
+
+    public static Address getInterimInheritanceAddress(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
+        Script redeemScript = inheritanceScriptWithCSV(ownerPubKey, heirPubKey, blocks);
+        Script script = ScriptBuilder.createP2SHOutputScript(redeemScript);
+        //TODO network params should be parametrized depending on mainnet/testnet wallet mode
+        NetworkParameters params = new TestNet3Params();
+        return script.getToAddress(params);
+    }
+
+    public static Script inheritanceScriptWithCSV(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
+        ScriptBuilder builder = new ScriptBuilder();
+
+        // This may help if we need to work with address: OP_DUP OP_HASH160 7f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a8 OP_EQUALVERIFY OP_CHECKSIG
+        builder.op(OP_IF);
+        builder.data(ownerPubKey);
+        builder.op(OP_CHECKSIG);
+        builder.op(OP_ELSE);
+        builder.data(encodeBip68Sequence(blocks));
+        builder.op(OP_CHECKSEQUENCEVERIFY);
+        builder.op(OP_DROP);
+        builder.data(heirPubKey);
+        builder.op(OP_CHECKSIG);
+        builder.op(OP_ENDIF);
+
+        return builder.build();
+    }
+
+    private static byte[] encodeBip68Sequence(int blocks) {
+        int SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
+        if (blocks > SEQUENCE_LOCKTIME_MASK) throw new ScriptException(ScriptError.SCRIPT_ERR_UNSATISFIED_LOCKTIME, "Exceeded max number of blocks!");
+
+        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+        buffer.putInt(blocks);
+        byte[] sequenceBytes = buffer.array();
+        byte[] reversedSequenceBytes = new byte[sequenceBytes.length];
+        for (int i = 0; i < sequenceBytes.length; i++) {
+            reversedSequenceBytes[i] = sequenceBytes[sequenceBytes.length - i - 1];
+        }
+
+        return reversedSequenceBytes;
     }
 }

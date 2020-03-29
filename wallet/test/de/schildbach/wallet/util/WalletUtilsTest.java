@@ -19,9 +19,15 @@ package de.schildbach.wallet.util;
 
 import java.io.IOException;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.DumpedPrivateKey;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Andreas Schildbach
@@ -37,5 +43,29 @@ public class WalletUtilsTest {
     public void restoreWalletFromProtobuf_wrongNetwork() throws Exception {
         WalletUtils.restoreWalletFromProtobuf(getClass().getResourceAsStream("backup-protobuf-testnet"),
                 MainNetParams.get());
+    }
+
+    @Test
+    public void getInterimInheritanceAddress() throws Exception {
+        NetworkParameters TESTNET = TestNet3Params.get();
+        ECKey ownerKey = DumpedPrivateKey.fromBase58(TESTNET, "cTd6fawai4faiGwZ9e4YaVjLDuaZrYa8uaNvvVauzEBH7cxZxbmk").getKey();
+        ECKey heirKey = DumpedPrivateKey.fromBase58(TESTNET, "cU7PGUMQR19z6JoD1paHZNcwRETchK1u2J9dG7UJiV8LyjBwvHgq").getKey();
+        byte[] ownerPubKey = ownerKey.getPubKey();
+        byte[] heirPubKey = heirKey.getPubKey();
+
+        String expectedRedeem = "6321039ffefe0a744dc21d4d54018e19076563a3b1397c377910820971533658118756ac6756b275210269d80dd300f507c60adc9928290ef9b94ee2362ffabc44da37f3adde3c227b00ac68";
+        byte[] actualRedeemBytes = WalletUtils.inheritanceScriptWithCSV(ownerPubKey, heirPubKey, 6).getProgram();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : actualRedeemBytes) {
+            sb.append(String.format("%02X", b));
+        }
+        String actualRedeem = sb.toString();
+
+        assertEquals(expectedRedeem.toUpperCase(), actualRedeem.toUpperCase());
+
+        Address expectedAddress = Address.fromString(TESTNET,"2MvpqRfKPUnBv5p6QrKoFPvKC6gWw45qvqj");
+        Address actualAddress = WalletUtils.getInterimInheritanceAddress(ownerPubKey, heirPubKey, 6);
+
+        assertEquals(expectedAddress, actualAddress);
     }
 }
