@@ -54,11 +54,15 @@ import android.text.SpannedString;
 import android.text.style.TypefaceSpan;
 import androidx.annotation.Nullable;
 
+import static org.bitcoinj.script.ScriptOpCodes.OP_6;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
 import static org.bitcoinj.script.ScriptOpCodes.OP_DROP;
+import static org.bitcoinj.script.ScriptOpCodes.OP_DUP;
 import static org.bitcoinj.script.ScriptOpCodes.OP_ELSE;
 import static org.bitcoinj.script.ScriptOpCodes.OP_ENDIF;
+import static org.bitcoinj.script.ScriptOpCodes.OP_EQUALVERIFY;
+import static org.bitcoinj.script.ScriptOpCodes.OP_HASH160;
 import static org.bitcoinj.script.ScriptOpCodes.OP_IF;
 
 /**
@@ -248,6 +252,13 @@ public class WalletUtils {
         return null;
     }
 
+    public static Address getInterimInheritanceAddress(Address ownerAddress, Address heirAddress, int blocks) {
+        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        Script script = ScriptBuilder.createP2WSHOutputScript(redeemScript);
+        //TODO network params should be parametrized depending on mainnet/testnet wallet mode
+        NetworkParameters params = new TestNet3Params();
+        return script.getToAddress(params);
+    }
 
     public static Address getInterimInheritanceAddress(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
         Script redeemScript = inheritanceScriptWithCSV(ownerPubKey, heirPubKey, blocks);
@@ -257,19 +268,44 @@ public class WalletUtils {
         return script.getToAddress(params);
     }
 
+    public static Script inheritanceScriptWithCSV(Address ownerAddress, Address heirAddress, int blocks) {
+        ScriptBuilder builder = new ScriptBuilder();
+
+        builder.op(OP_IF);
+            builder.op(OP_DUP);
+            builder.op(OP_HASH160);
+            builder.data(ownerAddress.getHash());
+            builder.op(OP_EQUALVERIFY);
+            builder.op(OP_CHECKSIG);
+        builder.op(OP_ELSE);
+            builder.data(encodeBip68Sequence(blocks));
+            builder.op(OP_CHECKSEQUENCEVERIFY);
+            builder.op(OP_DROP);
+            builder.op(OP_DUP);
+            builder.op(OP_HASH160);
+            builder.data(heirAddress.getHash());
+            builder.op(OP_EQUALVERIFY);
+            builder.op(OP_CHECKSIG);
+        builder.op(OP_ENDIF);
+
+        return builder.build();
+    }
+
+
     public static Script inheritanceScriptWithCSV(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
         ScriptBuilder builder = new ScriptBuilder();
 
-        // This may help if we need to work with address: OP_DUP OP_HASH160 7f9b1a7fb68d60c536c2fd8aeaa53a8f3cc025a8 OP_EQUALVERIFY OP_CHECKSIG
         builder.op(OP_IF);
-        builder.data(ownerPubKey);
-        builder.op(OP_CHECKSIG);
+            builder.data(ownerPubKey);
+            builder.op(OP_CHECKSIG);
         builder.op(OP_ELSE);
-        builder.data(encodeBip68Sequence(blocks));
-        builder.op(OP_CHECKSEQUENCEVERIFY);
-        builder.op(OP_DROP);
-        builder.data(heirPubKey);
-        builder.op(OP_CHECKSIG);
+//            builder.data(encodeBip68Sequence(blocks));
+        //TODO get rid of this hardcode. May be change encodeBip68Sequence function to work with builder
+            builder.op(OP_6); //OP_6 means push single byte with 0x06 value onto the stack
+            builder.op(OP_CHECKSEQUENCEVERIFY);
+            builder.op(OP_DROP);
+            builder.data(heirPubKey);
+            builder.op(OP_CHECKSIG);
         builder.op(OP_ENDIF);
 
         return builder.build();
