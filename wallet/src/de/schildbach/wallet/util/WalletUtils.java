@@ -252,7 +252,7 @@ public class WalletUtils {
         return null;
     }
 
-    public static Address getInterimInheritanceAddress(Address ownerAddress, Address heirAddress, int blocks) {
+    public static Address getInterimInheritanceAddressP2WSH(Address ownerAddress, Address heirAddress, int blocks) {
         Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
         Script script = ScriptBuilder.createP2WSHOutputScript(redeemScript);
         //TODO network params should be parametrized depending on mainnet/testnet wallet mode
@@ -260,7 +260,7 @@ public class WalletUtils {
         return script.getToAddress(params);
     }
 
-    public static Address getInterimInheritanceAddress(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
+    public static Address getInterimInheritanceAddressP2SH(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
         Script redeemScript = inheritanceScriptWithCSV(ownerPubKey, heirPubKey, blocks);
         Script script = ScriptBuilder.createP2SHOutputScript(redeemScript);
         //TODO network params should be parametrized depending on mainnet/testnet wallet mode
