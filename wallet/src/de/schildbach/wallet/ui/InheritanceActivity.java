@@ -21,16 +21,21 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LiveData;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.uri.BitcoinURI;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
+import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.data.InheritanceDao;
+import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Qr;
@@ -45,9 +50,14 @@ public final class InheritanceActivity extends AbstractWalletActivity {
     private ArrayAdapter adapter;
     private String signedTx;
 
+    private InheritanceDao inheritanceDao;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance);
 
@@ -102,6 +112,16 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         final View signBtn = findViewById(R.id.sign_inheritance_tx);
         signBtn.setOnClickListener(v -> signInheritanceTx(v));
 
+
+        final ImageView address_qr = findViewById(R.id.address_qr);
+        address_qr.setImageBitmap(Qr.bitmap("My test"));
+
+        InheritanceEntity in = new InheritanceEntity("test", "test2");
+        inheritanceDao.insertOrUpdate(in);
+
+        List<InheritanceEntity> all = inheritanceDao.getAll();
+
+        System.out.println(all);
 
     }
 

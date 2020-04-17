@@ -27,9 +27,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 /**
  * @author Andreas Schildbach
  */
-@Database(entities = { AddressBookEntry.class }, version = 2, exportSchema = false)
+@Database(entities = { AddressBookEntry.class, InheritanceEntity.class }, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AddressBookDao addressBookDao();
+    public abstract InheritanceDao inheritanceDao();
 
     private static AppDatabase INSTANCE;
 
@@ -38,7 +39,7 @@ public abstract class AppDatabase extends RoomDatabase {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(), AppDatabase.class, "address_book")
-                            .addMigrations(MIGRATION_1_2).allowMainThreadQueries().build();
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3).allowMainThreadQueries().build();
                 }
             }
         }
@@ -54,6 +55,14 @@ public abstract class AppDatabase extends RoomDatabase {
                     "INSERT OR IGNORE INTO address_book_new (address, label) SELECT address, label FROM address_book");
             database.execSQL("DROP TABLE address_book");
             database.execSQL("ALTER TABLE address_book_new RENAME TO address_book");
+        }
+    };
+
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(final SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE inheritance (address TEXT NOT NULL, label TEXT, PRIMARY KEY(address))");
         }
     };
 }
