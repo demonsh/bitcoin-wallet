@@ -23,16 +23,18 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import org.bitcoinj.core.Address;
-import org.bitcoinj.core.LegacyAddress;
-import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.wallet.Wallet;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
+import de.schildbach.wallet.util.Inheritance;
 import de.schildbach.wallet.util.Qr;
 
 public final class InheritanceActivity extends AbstractWalletActivity {
@@ -105,18 +107,26 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
     }
 
-    //TODO:
     private void signInheritanceTx(View v) {
+        WalletApplication application = getWalletApplication();
+        Wallet wallet = application.getWallet();
 
-        //TODO:
-        signedTx = "testTX....Z";
+        Address ownerAddress = wallet.currentReceiveAddress();
 
+        //TODO Heir address should not be hardcoded but received from Wallet storage, where it was previously stored to
+        Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
 
-        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(signedTx));
+        try {
+            Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+            signedTx = Hex.toHexString(tx.bitcoinSerialize());
+        } catch (Exception exception) {
+            signedTx = exception.getMessage();
+        }
+
+        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
         bitmap.setFilterBitmap(false);
         final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
         imageView.setImageDrawable(bitmap);
-
 
         Toast.makeText(this, "Sign tx", Toast.LENGTH_SHORT).show();
     }
