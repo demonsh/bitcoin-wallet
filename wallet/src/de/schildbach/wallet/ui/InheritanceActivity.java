@@ -119,7 +119,8 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         final ImageView address_qr = findViewById(R.id.address_qr);
         address_qr.setImageBitmap(Qr.bitmap("My test"));
 
-        InheritanceEntity in = new InheritanceEntity("test", "test2");
+        //todo This address we should get by heir address QR scan
+        InheritanceEntity in = new InheritanceEntity("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv", "heirAddress");
         inheritanceDao.insertOrUpdate(in);
 
         List<InheritanceEntity> all = inheritanceDao.getAll();
@@ -134,22 +135,31 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
         Address ownerAddress = wallet.currentReceiveAddress();
 
-        //TODO Heir address should not be hardcoded but received from Wallet storage, where it was previously stored to
-        Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
+        InheritanceEntity heirEntity = inheritanceDao
+                .getAll()
+                .stream()
+                .filter(entity -> "heirAddress".equals(entity.getLabel()))
+                .findAny()
+                .orElse(null);
 
-        try {
-            Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
-            signedTx = Hex.toHexString(tx.bitcoinSerialize());
-        } catch (Exception exception) {
-            signedTx = exception.getMessage();
+        if (heirEntity != null) {
+            try {
+                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirEntity.getAddress());
+                Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+                signedTx = Hex.toHexString(tx.bitcoinSerialize());
+                Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
+            } catch (Exception exception) {
+                Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(this, "Failed to sign inheritance transaction: Heir address is missing", Toast.LENGTH_LONG).show();
         }
 
-        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
-        bitmap.setFilterBitmap(false);
-        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
-        imageView.setImageDrawable(bitmap);
-
-        Toast.makeText(this, "Sign tx", Toast.LENGTH_SHORT).show();
+        //todo make this part of code not to crash application and show QR of inheritnace transaction
+//        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
+//        bitmap.setFilterBitmap(false);
+//        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
+//        imageView.setImageDrawable(bitmap);
     }
 
     public void handleScan(final View clickView) {
