@@ -462,7 +462,7 @@ public final class WalletActivity extends AbstractWalletActivity {
             viewModel.showHelpDialog.setValue(new Event<>(R.string.help_wallet));
             return true;
         } else if( itemId == R.id.wallet_inheritance_owner){
-            startActivity(new Intent(this, InheritanceActivity.class));
+            startActivity(new Intent(this, InheritanceOwnerActivity.class));
         }
         else if( itemId == R.id.wallet_inheritance_heir){
             startActivity(new Intent(this, InheritanceHeirActivity.class));

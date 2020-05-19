@@ -12,9 +12,13 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,10 +28,18 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.uri.BitcoinURI;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
+import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.data.InheritanceDao;
+import de.schildbach.wallet.data.InheritanceEntity;
+import de.schildbach.wallet.data.InheritanceTxDao;
+import de.schildbach.wallet.data.TxEntity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Qr;
@@ -46,24 +58,23 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
     private View contentView;
     private View levitateView;
 
+    private ArrayList<String> txList = new ArrayList<String>();
+    private ArrayAdapter adapter;
 
+    private InheritanceTxDao txDao;
 
-    //TODO: find proper name
-    private String heirSignTx;
-
-    private TextView txSign;
-    private TextView txStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance_heir);
 
+        this.txDao = AppDatabase.getDatabase(this.getBaseContext()).txDao();
+
         contentView = findViewById(android.R.id.content);
         enterAnimation = buildEnterAnimation(contentView);
 
         levitateView = contentView.findViewWithTag("levitate");
-
 
         final View sendQrButton = findViewById(R.id.wallet_actions_send_qr);
         sendQrButton.setOnClickListener(v -> handleScan(v));
@@ -72,33 +83,30 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
             sendQrButton.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.fg_on_dark_bg_network_significant), PorterDuff.Mode.SRC_ATOP);
 
 
-        //tx_sign_by_owner
-        txSign = findViewById(R.id.tx_sign_by_owner);
-        txSign.setText(heirSignTx);
+        final ListView listview = (ListView) findViewById(R.id.list_inheritance);
 
-        txStatus = findViewById(R.id.tx_status);
-        //TODO:Get tx Status
-        txStatus.setText("Hold");
+        List<TxEntity> all = txDao.getAll();
 
-        final View sendInheritanceTx = findViewById(R.id.send_inheritance_tx);
-        sendInheritanceTx.setOnClickListener(v->handleSendInheritanceTX(v));
+        txList = all.stream()
+                .map(i -> i.getTx())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        adapter = new ArrayAdapter(this,
+                android.R.layout.simple_list_item_1, txList);
+        listview.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
 
-        //QR
+                final Intent intent = new Intent(InheritanceHeirActivity.this,InheritanceHeirDetailActivity.class);
+                intent.putExtra("tx", txList.get(i));
+                startActivity(intent);
 
-        final Address address = Address.fromString(Constants.NETWORK_PARAMETERS, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
-        final String addressStr = address.toString();
-        final String addressUri;
-        //if (address instanceof LegacyAddress || addressLabel != null)
-        if (address instanceof LegacyAddress)
-            addressUri = BitcoinURI.convertToBitcoinURI(address, null, addressStr, null);
-        else
-            addressUri = address.toString().toUpperCase(Locale.US);
-
-        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(addressUri));
-        bitmap.setFilterBitmap(false);
-        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
-        imageView.setImageDrawable(bitmap);
+            }
+        });
 
     }
 
@@ -109,16 +117,6 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         ScanActivity.startForResult(this, clickView, 0);
     }
 
-    //TODO:
-    private void handleSendInheritanceTX(View v) {
-
-        //Send tx
-        //TODO: get tx status
-        txStatus.setText("Pending...");
-
-        Toast.makeText(this, "Withdraw inheritance TX", Toast.LENGTH_SHORT).show();
-    }
-
     @Override
     public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         if (requestCode == 0) {
@@ -127,15 +125,31 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
                 //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
-                heirSignTx = input;
+                adapter.add(input);
+                adapter.notifyDataSetChanged();
 
-                //tx_sign_by_owner
-                txSign.setText(heirSignTx);
+                saveTx(input);
+
+                log.debug(input);
 
             }
         } else {
             super.onActivityResult(requestCode, resultCode, intent);
         }
+    }
+
+    private void saveTx(String input) {
+
+            try {
+
+                TxEntity in = new TxEntity(input, "heirAddress");
+                txDao.insertOrUpdate(in);
+
+            } catch (Exception exc) {
+                log.error(exc.toString());
+                Toast.makeText(InheritanceHeirActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
+            }
+
     }
 
     private AnimatorSet buildEnterAnimation(final View contentView) {

@@ -6,17 +6,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="My heir" />
-
-    <fragment
-        android:id="@+id/wallet_address_fragment"
-        android:name="de.schildbach.wallet.ui.InheritanceAddressFragment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
-        android:layout_marginTop="@dimen/list_entry_padding_vertical_lax"
-        android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
-        android:layout_marginBottom="@dimen/list_entry_padding_vertical_lax" />
+        android:text="Heir - tx to spend" />
 
 
     <ImageButton
@@ -31,26 +21,6 @@
         android:contentDescription="@string/button_scan"
         android:src="@drawable/ic_photo_camera_white_24dp"
         android:tint="@color/bg_action_bar" />
-
-    <TextView
-        android:id="@+id/tx_sign_by_owner"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:layout_marginLeft="@dimen/list_entry_padding_horizontal_cram"
-        android:layout_marginRight="@dimen/list_entry_padding_horizontal_cram"/>
-
-
-    <Button
-        android:id="@+id/send_inheritance_tx"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:text="Send TX"/>
-
-    <TextView
-        android:id="@+id/tx_status"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"/>
-
 
 
     <ListView

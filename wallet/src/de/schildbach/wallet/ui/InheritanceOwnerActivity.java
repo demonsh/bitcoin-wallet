@@ -8,7 +8,6 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,7 +20,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LiveData;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
@@ -30,7 +28,7 @@ import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
@@ -43,7 +41,7 @@ import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
 import de.schildbach.wallet.util.Qr;
 
-public final class InheritanceActivity extends AbstractWalletActivity {
+public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
     private AnimatorSet enterAnimation;
     private View contentView;
@@ -96,6 +94,11 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
         final ListView listview = (ListView) findViewById(R.id.list_heir);
 
+        List<InheritanceEntity> all = inheritanceDao.getAll();
+
+        list = all.stream()
+                .map(i -> i.getAddress())
+                .collect(Collectors.toCollection(ArrayList::new));
 
         //TODO: this is tmp imp;
         adapter = new ArrayAdapter(this,
@@ -103,13 +106,25 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         listview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(InheritanceActivity.this, "Addresss"+list.get(i), Toast.LENGTH_SHORT).show();
+                Toast.makeText(InheritanceOwnerActivity.this, "Addresss" + list.get(i), Toast.LENGTH_SHORT).show();
+
+//                String signedTx = signInheritanceTx(list.get(i));
+//                String signedTx = signInheritanceTx("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
+                //TODO:
+                String signedTx = "my syper puper tets tx safsdklfjsa;lkdjf ;lkasdjf lk;asdjf  klsdjf l;kasdjfas kdjfl;kasdj flkasdj ;lfkjsda l;kfjdsalk fjasdl;k fjasdlkfj l;kadsjf laskdjf lksdajf";
+
+//                final ImageView address_qr = findViewById(R.id.address_qr);
+//                address_qr.setImageBitmap(Qr.bitmap(signedTx));
+
+                final Intent intent = new Intent(InheritanceOwnerActivity.this,InheritanceQRActivity.class);
+                intent.putExtra("tx", signedTx);
+                startActivity(intent);
+
             }
         });
-
 
 
         final View signBtn = findViewById(R.id.sign_inheritance_tx);
@@ -118,14 +133,6 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
         final ImageView address_qr = findViewById(R.id.address_qr);
         address_qr.setImageBitmap(Qr.bitmap("My test"));
-
-        //todo This address we should get by heir address QR scan
-        InheritanceEntity in = new InheritanceEntity("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv", "heirAddress");
-        inheritanceDao.insertOrUpdate(in);
-
-        List<InheritanceEntity> all = inheritanceDao.getAll();
-
-        System.out.println(all);
 
     }
 
@@ -274,12 +281,71 @@ public final class InheritanceActivity extends AbstractWalletActivity {
                 //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
+                //TODO: address validation
+
                 adapter.add(input);
                 adapter.notifyDataSetChanged();
+
+                saveAddress(input);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, intent);
         }
+    }
+
+    private void saveAddress(String input) {
+
+        try {
+
+            InheritanceEntity in = new InheritanceEntity(input, "heirAddress");
+            inheritanceDao.insertOrUpdate(in);
+        } catch (Exception exc) {
+            log.error(exc.toString());
+            Toast.makeText(InheritanceOwnerActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
+        }
+
+    }
+
+    /**
+     * Sign tx for hair
+     *
+     * @param heirAddr
+     * @return signed tx
+     */
+    private String signInheritanceTx(String heirAddr) {
+
+        //TODO: addr validation
+        if (heirAddr == null) {
+            return "";
+        }
+
+        WalletApplication application = getWalletApplication();
+        Wallet wallet = application.getWallet();
+
+        Address ownerAddress = wallet.currentReceiveAddress();
+
+
+        try {
+            Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirAddr);
+            Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+            signedTx = Hex.toHexString(tx.bitcoinSerialize());
+            Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
+
+            return signedTx;
+
+        } catch (Exception exception) {
+            Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
+        }
+
+        Toast.makeText(this, "Failed to sign inheritance transaction: Heir address is missing", Toast.LENGTH_LONG).show();
+
+        return "";
+
+        //todo make this part of code not to crash application and show QR of inheritnace transaction
+//        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
+//        bitmap.setFilterBitmap(false);
+//        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
+//        imageView.setImageDrawable(bitmap);
     }
 
 }

@@ -27,10 +27,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 /**
  * @author Andreas Schildbach
  */
-@Database(entities = { AddressBookEntry.class, InheritanceEntity.class }, version = 3, exportSchema = false)
+@Database(entities = { AddressBookEntry.class, InheritanceEntity.class, TxEntity.class }, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract AddressBookDao addressBookDao();
     public abstract InheritanceDao inheritanceDao();
+    public abstract InheritanceTxDao txDao();
 
     private static AppDatabase INSTANCE;
 
@@ -63,6 +64,8 @@ public abstract class AppDatabase extends RoomDatabase {
         public void migrate(final SupportSQLiteDatabase database) {
             database.execSQL(
                     "CREATE TABLE inheritance (address TEXT NOT NULL, label TEXT, PRIMARY KEY(address))");
+            database.execSQL(
+                    "CREATE TABLE inheritanceTx (tx TEXT NOT NULL, label TEXT, PRIMARY KEY(tx))");
         }
     };
 }
