@@ -21,8 +21,9 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
@@ -34,7 +35,6 @@ import org.bitcoinj.wallet.Wallet;
 
 import java.nio.ByteBuffer;
 
-import static org.bitcoinj.script.ScriptOpCodes.OP_6;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
 import static org.bitcoinj.script.ScriptOpCodes.OP_DROP;
@@ -68,50 +68,30 @@ public class Inheritance {
             int blocks,
             Wallet wallet
     ) throws Exception {
-
-        Address addressToWidthrawTo;
-        if (wallet.isAddressMine(ownerAddress)) {
-            addressToWidthrawTo = ownerAddress;
-        } else if (wallet.isAddressMine(heirAddress)) {
-            addressToWidthrawTo = heirAddress;
-        } else {
-            throw new Exception("Wrong owner or heir address");
-        }
-
-        Coin balanceToWidthraw = getInterimAddressInfo(
-                ownerAddress,
-                heirAddress,
-                blocks,
-                wallet
-        ).balance;
-
-        //TODO his hould not be hardcoded but calculated dynamically
-        balanceToWidthraw.subtract(Coin.valueOf(100000));
+        Address addressToWidthrawTo = getAddressToWithdrawTo(ownerAddress, heirAddress, wallet);
+        Coin totalInheritedBalance = getInterimAddressInfo(ownerAddress, heirAddress, blocks, wallet).balance;
 
         //TODO switch to real transaction when local storage is ready
 //        Transaction inheritnaceTx = getInheritanceTransactionFromLocalStorage();
         Transaction inheritanceTx = signInheritanceTx(ownerAddress, heirAddress, blocks, wallet);
 
-        //TODO network params should be parametrized depending on mainnet/testnet wallet mode
-        NetworkParameters params = new TestNet3Params();
-        Transaction tx = new Transaction(params);
+        Transaction tx = new Transaction(wallet.getNetworkParameters());
 
-        Sha256Hash hash = inheritanceTx.getTxId();
-        int index = 0;
-        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        TransactionInput input = createInputToWithdrawFromInterimAddress(inheritanceTx, ownerAddress, heirAddress, blocks, wallet);
+        tx.addInput(input);
 
-        tx.addInput(hash, index, redeemScript); //TODO may be use ScriptBuilder.createP2WSHOutputScript(redeemScript) here
-        tx.getInput(index).setSequenceNumber(blocks); //TODO blocks, probably, should be encoded into sequence before
-        tx.addOutput(balanceToWidthraw, addressToWidthrawTo);
+        tx.addOutput(Coin.ZERO, addressToWidthrawTo);
+        Coin balanceToWithdraw = getMaxBalanceToWithdrawExceptFee(tx, totalInheritedBalance, wallet);
+        tx.getOutput(0).setValue(balanceToWithdraw);
 
         TransactionSigner.ProposedTransaction proposedTransaction = new TransactionSigner.ProposedTransaction(tx);
         LocalTransactionSigner localTransactionSigner = new LocalTransactionSigner();
         localTransactionSigner.signInputs(proposedTransaction, wallet);
 
-        broadcastInheritanceTx(tx, wallet);
+        broadcastTx(tx, wallet);
     }
 
-    public static void broadcastInheritanceTx(Transaction tx, Wallet wallet) {
+    public static void broadcastTx(Transaction tx, Wallet wallet) {
         //TODO complete implementation
     }
 
@@ -132,14 +112,6 @@ public class Inheritance {
     public static Address getInterimInheritanceAddressP2WSH(Address ownerAddress, Address heirAddress, int blocks) {
         Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
         Script script = ScriptBuilder.createP2WSHOutputScript(redeemScript);
-        //TODO network params should be parametrized depending on mainnet/testnet wallet mode
-        NetworkParameters params = new TestNet3Params();
-        return script.getToAddress(params);
-    }
-
-    public static Address getInterimInheritanceAddressP2SH(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
-        Script redeemScript = inheritanceScriptWithCSV(ownerPubKey, heirPubKey, blocks);
-        Script script = ScriptBuilder.createP2SHOutputScript(redeemScript);
         //TODO network params should be parametrized depending on mainnet/testnet wallet mode
         NetworkParameters params = new TestNet3Params();
         return script.getToAddress(params);
@@ -185,26 +157,7 @@ public class Inheritance {
         return builder.build();
     }
 
-    public static Script inheritanceScriptWithCSV(byte[] ownerPubKey, byte[] heirPubKey, int blocks) {
-        ScriptBuilder builder = new ScriptBuilder();
-
-        builder.op(OP_IF);
-        builder.data(ownerPubKey);
-        builder.op(OP_CHECKSIG);
-        builder.op(OP_ELSE);
-//            builder.data(encodeBip68Sequence(blocks));
-        //TODO get rid of this hardcode. May be change encodeBip68Sequence function to work with builder
-        builder.op(OP_6); //OP_6 means push single byte with 0x06 value onto the stack
-        builder.op(OP_CHECKSEQUENCEVERIFY);
-        builder.op(OP_DROP);
-        builder.data(heirPubKey);
-        builder.op(OP_CHECKSIG);
-        builder.op(OP_ENDIF);
-
-        return builder.build();
-    }
-
-    static byte[] encodeBip68Sequence(int blocks) {
+    private static byte[] encodeBip68Sequence(int blocks) {
         int SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
         if (blocks > SEQUENCE_LOCKTIME_MASK) throw new ScriptException(ScriptError.SCRIPT_ERR_UNSATISFIED_LOCKTIME, "Exceeded max number of blocks!");
 
@@ -217,5 +170,37 @@ public class Inheritance {
         }
 
         return reversedSequenceBytes;
+    }
+
+    private static Coin getMaxBalanceToWithdrawExceptFee(Transaction tx, Coin balance, Wallet wallet) {
+        return balance.subtract(Coin.valueOf(10000)); //TODO substract real fee based on size and satoshis per byte
+    }
+
+    private static TransactionInput createInputToWithdrawFromInterimAddress(
+            Transaction inheritanceTx,
+            Address ownerAddress,
+            Address heirAddress,
+            int blocks,
+            Wallet wallet
+    ) {
+        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        NetworkParameters params = wallet.getParams();
+        TransactionOutPoint outpoint = new TransactionOutPoint(params, 0, inheritanceTx);
+        TransactionInput input = new TransactionInput(params, inheritanceTx, redeemScript.getProgram(), outpoint);
+
+        input.setSequenceNumber(blocks); //TODO blocks, probably, should be encoded into sequence before
+        return input;
+    }
+
+    private static Address getAddressToWithdrawTo(Address ownerAddress, Address heirAddress, Wallet wallet) throws Exception {
+        Address addressToWithdrawTo;
+        if (wallet.isAddressMine(ownerAddress)) {
+            addressToWithdrawTo = ownerAddress;
+        } else if (wallet.isAddressMine(heirAddress)) {
+            addressToWithdrawTo = heirAddress;
+        } else {
+            throw new Exception("Wrong owner or heir address");
+        }
+        return addressToWithdrawTo;
     }
 }
