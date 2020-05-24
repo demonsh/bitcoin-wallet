@@ -31,6 +31,7 @@ import org.bitcoinj.script.ScriptError;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.signers.LocalTransactionSigner;
 import org.bitcoinj.signers.TransactionSigner;
+import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
 import java.nio.ByteBuffer;
@@ -92,7 +93,11 @@ public class Inheritance {
     }
 
     public static void broadcastTx(Transaction tx, Wallet wallet) {
-        //TODO complete implementation
+        try {
+            wallet.sendCoins(SendRequest.forTx(tx));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static InterimAddressInfo getInterimAddressInfo(
