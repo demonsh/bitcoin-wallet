@@ -107,18 +107,17 @@ public class Inheritance {
             Wallet wallet
     ){
         InterimAddressInfo interimAddressInfo = new InterimAddressInfo();
-        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks);
+        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, wallet);
         //TODO make sure if there is a better way to get address balance than AddressBalance class from Internet
         interimAddressInfo.balance = wallet.getBalance(new AddressBalance(interimAddress));
         interimAddressInfo.blockTillDeadline = 0;  //TODO define real blockTillDeadline
         return interimAddressInfo;
     }
 
-    public static Address getInterimInheritanceAddressP2WSH(Address ownerAddress, Address heirAddress, int blocks) {
+    public static Address getInterimInheritanceAddressP2WSH(Address ownerAddress, Address heirAddress, int blocks, Wallet wallet) {
         Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
         Script script = ScriptBuilder.createP2WSHOutputScript(redeemScript);
-        //TODO network params should be parametrized depending on mainnet/testnet wallet mode
-        NetworkParameters params = new TestNet3Params();
+        NetworkParameters params = wallet.getParams();
         return script.getToAddress(params);
     }
 
@@ -128,7 +127,8 @@ public class Inheritance {
             int blocks,
             Wallet wallet
     ) throws Exception {
-        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks);
+        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, wallet);
+        //TODO inherit all available balance minus fee
         Coin allAvailableBalance = wallet.getBalance();
         Coin valueToInherit = allAvailableBalance.divide(10);
 
