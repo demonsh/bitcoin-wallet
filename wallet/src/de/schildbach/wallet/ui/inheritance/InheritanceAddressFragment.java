@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package de.schildbach.wallet.ui.inheritance;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
@@ -38,6 +38,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.schildbach.wallet.R;
+import de.schildbach.wallet.ui.AbstractWalletActivity;
+import de.schildbach.wallet.ui.Event;
+import de.schildbach.wallet.ui.WalletActivityViewModel;
+import de.schildbach.wallet.ui.WalletAddressDialogFragment;
+import de.schildbach.wallet.ui.WalletAddressViewModel;
 
 /**
  * @author Andreas Schildbach

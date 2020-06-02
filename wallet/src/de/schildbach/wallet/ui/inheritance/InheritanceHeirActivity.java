@@ -1,4 +1,4 @@
-package de.schildbach.wallet.ui;
+package de.schildbach.wallet.ui.inheritance;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
@@ -8,41 +8,29 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.LegacyAddress;
-import org.bitcoinj.uri.BitcoinURI;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
-import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.data.AppDatabase;
-import de.schildbach.wallet.data.InheritanceDao;
-import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.data.InheritanceTxDao;
 import de.schildbach.wallet.data.TxEntity;
+import de.schildbach.wallet.ui.AbstractWalletActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
-import de.schildbach.wallet.util.Qr;
 
 /**
  * InheritanceHeirActivity.class

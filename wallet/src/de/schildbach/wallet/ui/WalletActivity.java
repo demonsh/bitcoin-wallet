@@ -34,6 +34,8 @@ import de.schildbach.wallet.ui.InputParser.BinaryInputParser;
 import de.schildbach.wallet.ui.InputParser.StringInputParser;
 import de.schildbach.wallet.ui.backup.BackupWalletActivity;
 import de.schildbach.wallet.ui.backup.RestoreWalletDialogFragment;
+import de.schildbach.wallet.ui.inheritance.InheritanceHeirActivity;
+import de.schildbach.wallet.ui.inheritance.InheritanceOwnerActivity;
 import de.schildbach.wallet.ui.monitor.NetworkMonitorActivity;
 import de.schildbach.wallet.ui.preference.PreferenceActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;

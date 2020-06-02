@@ -1,4 +1,4 @@
-package de.schildbach.wallet.ui;
+package de.schildbach.wallet.ui.inheritance;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,6 +7,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import de.schildbach.wallet.R;
+import de.schildbach.wallet.ui.AbstractWalletActivity;
 
 public class InheritanceHeirDetailActivity extends AbstractWalletActivity {
 

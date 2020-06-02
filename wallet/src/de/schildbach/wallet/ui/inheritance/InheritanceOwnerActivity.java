@@ -1,4 +1,4 @@
-package de.schildbach.wallet.ui;
+package de.schildbach.wallet.ui.inheritance;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
@@ -36,6 +36,8 @@ import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.data.AppDatabase;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
+import de.schildbach.wallet.ui.AbstractWalletActivity;
+import de.schildbach.wallet.ui.InheritanceQRActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
@@ -112,14 +114,14 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
                 Toast.makeText(InheritanceOwnerActivity.this, "Addresss" + list.get(i), Toast.LENGTH_SHORT).show();
 
 //                String signedTx = signInheritanceTx(list.get(i));
-//                String signedTx = signInheritanceTx("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
+                String signedTx = signInheritanceTx("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
                 //TODO:
-                String signedTx = "my syper puper tets tx safsdklfjsa;lkdjf ;lkasdjf lk;asdjf  klsdjf l;kasdjfas kdjfl;kasdj flkasdj ;lfkjsda l;kfjdsalk fjasdl;k fjasdlkfj l;kadsjf laskdjf lksdajf";
+                //String signedTx = "my syper puper tets tx safsdklfjsa;lkdjf ;lkasdjf lk;asdjf  klsdjf l;kasdjfas kdjfl;kasdj flkasdj ;lfkjsda l;kfjdsalk fjasdl;k fjasdlkfj l;kadsjf laskdjf lksdajf";
 
 //                final ImageView address_qr = findViewById(R.id.address_qr);
 //                address_qr.setImageBitmap(Qr.bitmap(signedTx));
 
-                final Intent intent = new Intent(InheritanceOwnerActivity.this,InheritanceQRActivity.class);
+                final Intent intent = new Intent(InheritanceOwnerActivity.this, InheritanceQRActivity.class);
                 intent.putExtra("tx", signedTx);
                 startActivity(intent);
 

@@ -69,7 +69,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="24">
 
-        <activity android:name="de.schildbach.wallet.ui.InheritanceHeirDetailActivity"/>
+        <activity android:name="de.schildbach.wallet.ui.inheritance.InheritanceHeirDetailActivity"/>
         <activity android:name="de.schildbach.wallet.ui.InheritanceQRActivity" />
         <activity
             android:name="de.schildbach.wallet.ui.WalletActivity"
@@ -191,15 +191,9 @@
             android:theme="@style/My.Theme.ChildActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <activity
-            android:name="de.schildbach.wallet.ui.InheritanceActivity"
-            android:label="@string/inheritance_activity_title"
-            android:theme="@style/My.Theme.ChildActivity" />
+        <activity android:name="de.schildbach.wallet.ui.inheritance.InheritanceOwnerActivity" />
 
-        <activity
-            android:name="de.schildbach.wallet.ui.InheritanceHeirActivity"
-            android:label="@string/inheritance_activity_title"
-            android:theme="@style/My.Theme.ChildActivity" />
+        <activity android:name="de.schildbach.wallet.ui.inheritance.InheritanceHeirActivity" />
 
 
         <provider
