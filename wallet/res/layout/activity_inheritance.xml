@@ -11,24 +11,24 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Owner" />
+        android:text="Activity for Owner. Scan hair address" />
 
-    <Button
-        android:id="@+id/sign_inheritance_tx"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:text="Sign TX"/>
+<!--    <Button-->
+<!--        android:id="@+id/sign_inheritance_tx"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="42dp"-->
+<!--        android:text="Sign TX"/>-->
 
 
-    <ImageView
-        android:id="@+id/address_qr"
-        android:layout_width="@dimen/wallet_address_qr_size"
-        android:layout_height="@dimen/wallet_address_qr_size"
-        android:layout_gravity="center"
-        android:contentDescription="@string/action_show_qr"
-        android:focusable="true"
-        android:padding="4dp"
-        android:scaleType="fitXY" />
+<!--    <ImageView-->
+<!--        android:id="@+id/address_qr"-->
+<!--        android:layout_width="@dimen/wallet_address_qr_size"-->
+<!--        android:layout_height="@dimen/wallet_address_qr_size"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:contentDescription="@string/action_show_qr"-->
+<!--        android:focusable="true"-->
+<!--        android:padding="4dp"-->
+<!--        android:scaleType="fitXY" />-->
 
 <!--        <fragment-->
 <!--            android:id="@+id/wallet_address_fragment"-->

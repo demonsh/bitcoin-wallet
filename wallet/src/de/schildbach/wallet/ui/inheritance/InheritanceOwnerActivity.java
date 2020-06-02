@@ -66,19 +66,7 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
         contentView = findViewById(android.R.id.content);
         enterAnimation = buildEnterAnimation(contentView);
-//
         levitateView = contentView.findViewWithTag("levitate");
-
-//        final Dialog dialog = new Dialog(activity);
-//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        dialog.setContentView(R.layout.wallet_address_dialog);
-//        dialog.setCanceledOnTouchOutside(true);
-
-
-//        imageView.setOnClickListener(v ->
-//                WalletAddressDialogFragment.show(getParentFragmentManager(), address, viewModel.ownName.getValue()););
-//
-//        setOnClickListener(v -> viewModel.showWalletAddressDialog.setValue(Event.simple()));
 
         final View sendQrButton = findViewById(R.id.wallet_actions_send_qr);
         sendQrButton.setOnClickListener(v -> handleScan(v));
@@ -86,13 +74,6 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1)
             sendQrButton.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.fg_on_dark_bg_network_significant), PorterDuff.Mode.SRC_ATOP);
 
-
-        //Recycle view
-
-//        recyclerViewHeir = findViewById(R.id.block_list);
-//        recyclerViewHeir.setLayoutManager(new StickToTopLinearLayoutManager(this));
-//        recyclerViewHeir.setAdapter(adapter);
-//        recyclerViewHeir.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
         final ListView listview = (ListView) findViewById(R.id.list_heir);
 
@@ -129,12 +110,12 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
         });
 
 
-        final View signBtn = findViewById(R.id.sign_inheritance_tx);
-        signBtn.setOnClickListener(v -> signInheritanceTx(v));
+//        final View signBtn = findViewById(R.id.sign_inheritance_tx);
+//        signBtn.setOnClickListener(v -> signInheritanceTx(v));
 
 
-        final ImageView address_qr = findViewById(R.id.address_qr);
-        address_qr.setImageBitmap(Qr.bitmap("My test"));
+//        final ImageView address_qr = findViewById(R.id.address_qr);
+//        address_qr.setImageBitmap(Qr.bitmap("My test"));
 
     }
 

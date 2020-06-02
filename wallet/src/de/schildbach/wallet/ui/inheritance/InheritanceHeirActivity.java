@@ -64,6 +64,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
         levitateView = contentView.findViewWithTag("levitate");
 
+        //Scan QR button. Scan Tx
         final View sendQrButton = findViewById(R.id.wallet_actions_send_qr);
         sendQrButton.setOnClickListener(v -> handleScan(v));
         CheatSheet.setup(sendQrButton);
@@ -71,6 +72,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
             sendQrButton.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.fg_on_dark_bg_network_significant), PorterDuff.Mode.SRC_ATOP);
 
 
+        //List of inherited tx
         final ListView listview = (ListView) findViewById(R.id.list_inheritance);
 
         List<TxEntity> all = txDao.getAll();
