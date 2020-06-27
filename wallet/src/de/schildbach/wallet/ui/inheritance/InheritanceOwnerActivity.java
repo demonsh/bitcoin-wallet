@@ -6,19 +6,24 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import org.bitcoinj.core.Address;
@@ -27,6 +32,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,11 +43,9 @@ import de.schildbach.wallet.data.AppDatabase;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.InheritanceQRActivity;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
-import de.schildbach.wallet.util.Qr;
 
 public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
@@ -49,11 +53,11 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
     private View contentView;
     private View levitateView;
 
-    private ArrayList<String> list = new ArrayList<String>();
     private ArrayAdapter adapter;
     private String signedTx;
 
     private InheritanceDao inheritanceDao;
+    private List<InheritanceEntity> list = Collections.emptyList();
 
 
     @Override
@@ -77,45 +81,25 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
         final ListView listview = (ListView) findViewById(R.id.list_heir);
 
-        List<InheritanceEntity> all = inheritanceDao.getAll();
+        list = inheritanceDao.getAll();
 
-        list = all.stream()
-                .map(i -> i.getAddress())
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        //TODO: this is tmp imp;
-        adapter = new ArrayAdapter(this,
-                android.R.layout.simple_list_item_1, list);
+        adapter = new AddressViewAdapter(this,
+                R.layout.layout_owner_address_view, list);
         listview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(InheritanceOwnerActivity.this, "Addresss" + list.get(i), Toast.LENGTH_SHORT).show();
 
-//                String signedTx = signInheritanceTx(list.get(i));
-                String signedTx = signInheritanceTx("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
-                //TODO:
-                //String signedTx = "my syper puper tets tx safsdklfjsa;lkdjf ;lkasdjf lk;asdjf  klsdjf l;kasdjfas kdjfl;kasdj flkasdj ;lfkjsda l;kfjdsalk fjasdl;k fjasdlkfj l;kadsjf laskdjf lksdajf";
-
-//                final ImageView address_qr = findViewById(R.id.address_qr);
-//                address_qr.setImageBitmap(Qr.bitmap(signedTx));
+                String address = list.get(i).getAddress();
 
                 final Intent intent = new Intent(InheritanceOwnerActivity.this, InheritanceQRActivity.class);
-                intent.putExtra("tx", signedTx);
+                intent.putExtra("address", address);
                 startActivity(intent);
 
             }
         });
-
-
-//        final View signBtn = findViewById(R.id.sign_inheritance_tx);
-//        signBtn.setOnClickListener(v -> signInheritanceTx(v));
-
-
-//        final ImageView address_qr = findViewById(R.id.address_qr);
-//        address_qr.setImageBitmap(Qr.bitmap("My test"));
 
     }
 
@@ -264,30 +248,28 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
                 //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
-                //TODO: address validation
+                final Intent newIntent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerNewHair.class);
+                newIntent.putExtra("address", input);
+                startActivity(newIntent);
 
-                adapter.add(input);
-                adapter.notifyDataSetChanged();
-
-                saveAddress(input);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, intent);
         }
     }
 
-    private void saveAddress(String input) {
-
-        try {
-
-            InheritanceEntity in = new InheritanceEntity(input, "heirAddress");
-            inheritanceDao.insertOrUpdate(in);
-        } catch (Exception exc) {
-            log.error(exc.toString());
-            Toast.makeText(InheritanceOwnerActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
-        }
-
-    }
+//    private void saveAddress(String input) {
+//
+//        try {
+//
+//            InheritanceEntity in = new InheritanceEntity(input, "heirAddress");
+//            inheritanceDao.insertOrUpdate(in);
+//        } catch (Exception exc) {
+//            log.error(exc.toString());
+//            Toast.makeText(InheritanceOwnerActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
+//        }
+//
+//    }
 
     /**
      * Sign tx for hair
@@ -331,4 +313,33 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 //        imageView.setImageDrawable(bitmap);
     }
 
+    private class AddressViewAdapter extends ArrayAdapter<InheritanceEntity> {
+
+        private Context context;
+        private int resource;
+
+        public AddressViewAdapter(Context context, int resource, List<InheritanceEntity> list) {
+            super(context, resource, list);
+            this.context = context;
+            this.resource = resource;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            InheritanceEntity item = getItem(position);
+
+            LayoutInflater inflater = LayoutInflater.from(context);
+            convertView = inflater.inflate(resource, parent, false);
+
+            TextView vDesc = convertView.findViewById(R.id.description);
+            TextView vAddr = convertView.findViewById(R.id.address);
+
+            vDesc.setText(item.getLabel());
+
+            vAddr.setText(item.getAddress());
+
+            return convertView;
+        }
+    }
 }
