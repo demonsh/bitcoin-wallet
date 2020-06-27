@@ -31,10 +31,8 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
@@ -101,39 +99,6 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
             }
         });
 
-    }
-
-    private void signInheritanceTx(View v) {
-        WalletApplication application = getWalletApplication();
-        Wallet wallet = application.getWallet();
-
-        Address ownerAddress = wallet.currentReceiveAddress();
-
-        InheritanceEntity heirEntity = inheritanceDao
-                .getAll()
-                .stream()
-                .filter(entity -> "heirAddress".equals(entity.getLabel()))
-                .findAny()
-                .orElse(null);
-
-        if (heirEntity != null) {
-            try {
-                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirEntity.getAddress());
-                Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
-                signedTx = Hex.toHexString(tx.bitcoinSerialize());
-                Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
-            } catch (Exception exception) {
-                Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Toast.makeText(this, "Failed to sign inheritance transaction: Heir address is missing", Toast.LENGTH_LONG).show();
-        }
-
-        //todo make this part of code not to crash application and show QR of inheritnace transaction
-//        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
-//        bitmap.setFilterBitmap(false);
-//        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
-//        imageView.setImageDrawable(bitmap);
     }
 
     public void handleScan(final View clickView) {

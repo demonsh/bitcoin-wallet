@@ -6,26 +6,34 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.data.InheritanceTxDao;
 import de.schildbach.wallet.data.TxEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -46,10 +54,10 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
     private View contentView;
     private View levitateView;
 
-    private ArrayList<String> txList = new ArrayList<String>();
     private ArrayAdapter adapter;
 
     private InheritanceTxDao txDao;
+    private List<TxEntity> txList = Collections.emptyList();
 
 
     @Override
@@ -75,14 +83,10 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         //List of inherited tx
         final ListView listview = (ListView) findViewById(R.id.list_inheritance);
 
-        List<TxEntity> all = txDao.getAll();
+        txList = txDao.getAll();
 
-        txList = all.stream()
-                .map(i -> i.getTx())
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        adapter = new ArrayAdapter(this,
-                android.R.layout.simple_list_item_1, txList);
+        adapter = new TxViewAdapter(this,
+                R.layout.layout_owner_address_view, txList);
         listview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
 
@@ -92,7 +96,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
 
                 final Intent intent = new Intent(InheritanceHeirActivity.this,InheritanceHeirDetailActivity.class);
-                intent.putExtra("tx", txList.get(i));
+                intent.putExtra("tx", txList.get(i).getTx());
                 startActivity(intent);
 
             }
@@ -236,5 +240,36 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         }
 
         return fragmentEnterAnimation;
+    }
+
+
+    private class TxViewAdapter extends ArrayAdapter<TxEntity> {
+
+        private Context context;
+        private int resource;
+
+        public TxViewAdapter(Context context, int resource, List<TxEntity> list) {
+            super(context, resource, list);
+            this.context = context;
+            this.resource = resource;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            TxEntity item = getItem(position);
+
+            LayoutInflater inflater = LayoutInflater.from(context);
+            convertView = inflater.inflate(resource, parent, false);
+
+            TextView vDesc = convertView.findViewById(R.id.description);
+            TextView vAddr = convertView.findViewById(R.id.address);
+
+            vDesc.setText(item.getLabel());
+
+            vAddr.setText(item.getTx());
+
+            return convertView;
+        }
     }
 }
