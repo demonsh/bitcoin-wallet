@@ -35,8 +35,6 @@ public class InheritanceOwnerNewHair extends AbstractWalletActivity {
         final TextView txView = findViewById(R.id.heir_address);
         txView.setText(address);
 
-        final EditText labelField = findViewById(R.id.heir_label);
-
         final Button btn = findViewById(R.id.save_heir_addr_btn);
 
         btn.setOnClickListener(v -> { onSaveClick(v);});
@@ -47,7 +45,18 @@ public class InheritanceOwnerNewHair extends AbstractWalletActivity {
     private void onSaveClick(View v) {
 
         try {
-            InheritanceEntity in = new InheritanceEntity(address, label);
+
+            final EditText labelField = findViewById(R.id.heir_label);
+
+            String  labelStr=labelField.getText().toString();
+
+            if("".equalsIgnoreCase(labelStr)){
+                labelField.setHint("please enter hair name");
+                labelField.setError("please enter hair name");
+                return;
+            }
+
+            InheritanceEntity in = new InheritanceEntity(address, labelField.getText().toString());
             inheritanceDao.insertOrUpdate(in);
 
             Toast.makeText(InheritanceOwnerNewHair.this, "Hair address saved", Toast.LENGTH_LONG);

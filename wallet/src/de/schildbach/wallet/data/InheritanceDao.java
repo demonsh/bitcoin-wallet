@@ -17,8 +17,8 @@ public interface InheritanceDao {
     @Query("DELETE FROM inheritance WHERE address = :address")
     void delete(String address);
 //
-//    @Query("SELECT * FROM address_book WHERE address LIKE '%' || :constraint || '%' OR label LIKE '%' || :constraint || '%' ORDER BY label COLLATE LOCALIZED ASC")
-//    List<AddressBookEntry> get(String constraint);
+    @Query("SELECT * FROM inheritance WHERE address =:address")
+    InheritanceEntity get(String address);
 //
     @Query("SELECT * FROM inheritance")
     List<InheritanceEntity> getAll();

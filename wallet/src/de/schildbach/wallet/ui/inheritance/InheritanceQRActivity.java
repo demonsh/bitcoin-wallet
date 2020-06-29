@@ -15,6 +15,9 @@ import org.bouncycastle.util.encoders.Hex;
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.data.AbstractWalletLiveData;
+import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
 import de.schildbach.wallet.util.Inheritance;
@@ -29,6 +32,8 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
     private Transaction tx;
     private Wallet wallet;
 
+    private InheritanceDao inheritanceDao;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +43,8 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
         address = intent.getStringExtra("address");
 
+        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+
         try {
             WalletApplication application = getWalletApplication();
             wallet = application.getWallet();
@@ -46,14 +53,19 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
             Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, address);
             tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
             String signedTx = Hex.toHexString(tx.bitcoinSerialize());
-           // Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
+
+
 
             final ImageView address_qr = findViewById(R.id.address_qr);
             address_qr.setImageBitmap(Qr.bitmap(signedTx));
 
-            //TODO: save tx
+            InheritanceEntity inheritanceEntity = inheritanceDao.get(address);
+            inheritanceEntity.setTx(signedTx);
+            inheritanceEntity.setOwnerAddress(ownerAddress.toString());
 
-        } catch (Exception exception) {
+            inheritanceDao.insertOrUpdate(inheritanceEntity);
+
+        } catch (Exception exc) {
             Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
         }
 
