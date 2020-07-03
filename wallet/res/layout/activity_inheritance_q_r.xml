@@ -1,29 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <Button
         android:id="@+id/inheritance_broadcast"
-        style="@style/My.Widget.ActionButton"
+
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:text="Brodcust" />
+        android:layout_height="42dp"
+        android:text="Broadcast" />
 
     <ImageView
         android:id="@+id/address_qr"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:adjustViewBounds="true"
-        android:contentDescription="@string/action_show_qr"
-        android:focusable="true"
-        android:padding="4dp"
-        android:scaleType="fitXY" />
+        />
+
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:layout_gravity="center"-->
+<!--    android:adjustViewBounds="true"-->
+<!--    android:contentDescription="@string/action_show_qr"-->
+<!--    android:focusable="true"-->
+<!--    android:padding="4dp"-->
+<!--    android:scaleType="fitXY"-->
+
+
 
 </LinearLayout>

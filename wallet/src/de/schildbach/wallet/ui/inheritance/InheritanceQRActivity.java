@@ -45,6 +45,18 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
         this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
 
+        InheritanceEntity current = inheritanceDao.get(address);
+
+        if(current.getTx() != null){
+            String owner = current.getOwnerAddress();
+            String tx = current.getTx();
+
+            String qrStr = owner+";"+tx;
+
+            final ImageView address_qr = findViewById(R.id.address_qr);
+            address_qr.setImageBitmap(Qr.bitmap(qrStr));
+        }
+
         try {
             WalletApplication application = getWalletApplication();
             wallet = application.getWallet();
@@ -52,12 +64,13 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
             Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, address);
             tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+
             String signedTx = Hex.toHexString(tx.bitcoinSerialize());
 
-
+            String qrStr = ownerAddress+";"+signedTx;
 
             final ImageView address_qr = findViewById(R.id.address_qr);
-            address_qr.setImageBitmap(Qr.bitmap(signedTx));
+            address_qr.setImageBitmap(Qr.bitmap(qrStr));
 
             InheritanceEntity inheritanceEntity = inheritanceDao.get(address);
             inheritanceEntity.setTx(signedTx);
@@ -74,17 +87,13 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
         Button broadcastBtn = findViewById(R.id.inheritance_broadcast);
 
         broadcastBtn.setOnClickListener(v -> {
-            broadCast();
+
+            Inheritance.broadcastInheritanceTx(tx, wallet);
         });
 
 
     }
 
-    private void broadCast() {
-        //TODO:
-        Inheritance.broadcastInheritanceTx(tx, wallet);
-        //TODO: how to check/track the result
-    }
 
 //    private void signInheritanceTx(View v) {
 //        WalletApplication application = getWalletApplication();

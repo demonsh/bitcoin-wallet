@@ -215,13 +215,23 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
                 final Intent newIntent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerNewHair.class);
                 newIntent.putExtra("address", input);
-                startActivity(newIntent);
+                startActivityForResult(newIntent, 0);
 
             }
-        } else {
-            super.onActivityResult(requestCode, resultCode, intent);
+
+            if(resultCode == 100){
+                list.clear();
+                list.addAll(inheritanceDao.getAll());
+
+                adapter.notifyDataSetChanged();
+            }
         }
+
+
+        super.onActivityResult(requestCode, resultCode, intent);
+
     }
+
 
 //    private void saveAddress(String input) {
 //

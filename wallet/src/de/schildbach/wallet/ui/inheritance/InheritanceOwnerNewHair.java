@@ -61,6 +61,7 @@ public class InheritanceOwnerNewHair extends AbstractWalletActivity {
 
             Toast.makeText(InheritanceOwnerNewHair.this, "Hair address saved", Toast.LENGTH_LONG);
 
+            setResult(100);
             finish();
 
         } catch (Exception exc) {
