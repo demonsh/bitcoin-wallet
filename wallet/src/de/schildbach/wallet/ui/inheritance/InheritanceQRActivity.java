@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.util.encoders.Hex;
@@ -47,9 +48,43 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
         InheritanceEntity current = inheritanceDao.get(address);
 
+        if(current.getTx() == null) {
+            try {
+                WalletApplication application = getWalletApplication();
+                wallet = application.getWallet();
+                Address ownerAddress = wallet.currentReceiveAddress();
+
+                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, address);
+                tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+
+                String signedTx = Hex.toHexString(tx.bitcoinSerialize());
+
+                String qrStr = ownerAddress + ";" + signedTx;
+
+                final ImageView address_qr = findViewById(R.id.address_qr);
+                address_qr.setImageBitmap(Qr.bitmap(qrStr));
+
+                InheritanceEntity inheritanceEntity = inheritanceDao.get(address);
+                inheritanceEntity.setTx(signedTx);
+                inheritanceEntity.setOwnerAddress(ownerAddress.toString());
+
+                inheritanceDao.insertOrUpdate(inheritanceEntity);
+
+            } catch (Exception exc) {
+                Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
+            }
+        }
+
         if(current.getTx() != null){
+            WalletApplication application = getWalletApplication();
+            wallet = application.getWallet();
+
             String owner = current.getOwnerAddress();
             String tx = current.getTx();
+
+            NetworkParameters params = wallet.getParams();
+            byte[] hex = Hex.decode(tx);
+            this.tx = new Transaction(params, hex);
 
             String qrStr = owner+";"+tx;
 
@@ -57,41 +92,25 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
             address_qr.setImageBitmap(Qr.bitmap(qrStr));
         }
 
-        try {
-            WalletApplication application = getWalletApplication();
-            wallet = application.getWallet();
-            Address ownerAddress = wallet.currentReceiveAddress();
-
-            Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, address);
-            tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
-
-            String signedTx = Hex.toHexString(tx.bitcoinSerialize());
-
-            String qrStr = ownerAddress+";"+signedTx;
-
-            final ImageView address_qr = findViewById(R.id.address_qr);
-            address_qr.setImageBitmap(Qr.bitmap(qrStr));
-
-            InheritanceEntity inheritanceEntity = inheritanceDao.get(address);
-            inheritanceEntity.setTx(signedTx);
-            inheritanceEntity.setOwnerAddress(ownerAddress.toString());
-
-            inheritanceDao.insertOrUpdate(inheritanceEntity);
-
-        } catch (Exception exc) {
-            Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
-        }
-
-
 
         Button broadcastBtn = findViewById(R.id.inheritance_broadcast);
 
-        broadcastBtn.setOnClickListener(v -> {
-
-            Inheritance.broadcastInheritanceTx(tx, wallet);
-        });
+        broadcastBtn.setOnClickListener(onBroadCastTx());
 
 
+    }
+
+    private View.OnClickListener onBroadCastTx() {
+        return v -> {
+
+            try {
+                Inheritance.broadcastTx(this.tx, this.wallet);
+                finish();
+            } catch (Exception e) {
+                Toast.makeText(this, "Failed to send tx...", Toast.LENGTH_LONG).show();
+            }
+            Toast.makeText(this, "Tx sent", Toast.LENGTH_LONG).show();
+        };
     }
 
 
