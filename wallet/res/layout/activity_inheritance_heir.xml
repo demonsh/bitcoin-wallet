@@ -8,6 +8,22 @@
         android:layout_height="wrap_content"
         android:text="Heir - tx to spend" />
 
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/ownerAddress"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/tx"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add"
+        android:id="@+id/addTx"/>
+
 
     <ImageButton
         android:id="@+id/wallet_actions_send_qr"

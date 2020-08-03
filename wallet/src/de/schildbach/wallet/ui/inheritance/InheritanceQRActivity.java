@@ -1,10 +1,14 @@
 package de.schildbach.wallet.ui.inheritance;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.bitcoinj.core.Address;
@@ -12,6 +16,15 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.util.encoders.Hex;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.zip.Deflater;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
@@ -33,14 +46,25 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
     private Transaction tx;
     private Wallet wallet;
 
+    private String txString;
+    private String ownerAddress;
+
     private InheritanceDao inheritanceDao;
+
+    private ClipboardManager clipboardManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance_q_r);
 
-        Intent intent=getIntent();
+
+        this.clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+
+        final TextView addressView = findViewById(R.id.address);
+        final TextView txView = findViewById(R.id.tx);
+
+        Intent intent = getIntent();
 
         address = intent.getStringExtra("address");
 
@@ -48,16 +72,18 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
         InheritanceEntity current = inheritanceDao.get(address);
 
-        if(current.getTx() == null) {
+        if (current.getTx() == null) {
             try {
                 WalletApplication application = getWalletApplication();
                 wallet = application.getWallet();
                 Address ownerAddress = wallet.currentReceiveAddress();
+                this.ownerAddress = ownerAddress.toString();
 
                 Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, address);
                 tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
 
                 String signedTx = Hex.toHexString(tx.bitcoinSerialize());
+                this.txString = signedTx;
 
                 String qrStr = ownerAddress + ";" + signedTx;
 
@@ -75,22 +101,42 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
             }
         }
 
-        if(current.getTx() != null){
+        if (current.getTx() != null) {
             WalletApplication application = getWalletApplication();
             wallet = application.getWallet();
 
             String owner = current.getOwnerAddress();
+            this.ownerAddress = owner;
+
             String tx = current.getTx();
+            this.txString = tx;
 
             NetworkParameters params = wallet.getParams();
             byte[] hex = Hex.decode(tx);
             this.tx = new Transaction(params, hex);
 
-            String qrStr = owner+";"+tx;
+            String qrStr = owner + ";" + tx;
 
-            final ImageView address_qr = findViewById(R.id.address_qr);
-            address_qr.setImageBitmap(Qr.bitmap(qrStr));
+
+            try {
+                //String compressedStr = compress(qrStr);
+
+                final ImageView address_qr = findViewById(R.id.address_qr);
+//                address_qr.setImageBitmap(Qr.bitmap(compressedStr));
+
+
+                address_qr.setImageBitmap(Qr.bitmap(compress(qrStr)));
+
+            } catch (Exception e) {
+                Toast.makeText(this, "Cannot compress qr code... ", Toast.LENGTH_LONG).show();
+            }
         }
+
+        addressView.setText(this.address);
+        addressView.setOnClickListener(copyToClipBoardAddress());
+
+        txView.setText(this.txString);
+        txView.setOnClickListener(copyToClipBoardTx());
 
 
         Button broadcastBtn = findViewById(R.id.inheritance_broadcast);
@@ -98,6 +144,24 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
         broadcastBtn.setOnClickListener(onBroadCastTx());
 
 
+    }
+
+    private TextView.OnClickListener copyToClipBoardAddress() {
+        return v ->{
+            // Creates a new text clip to put on the clipboard
+            ClipData clip = ClipData.newPlainText("Address copied", this.ownerAddress);
+            clipboardManager.setPrimaryClip(clip);
+            Toast.makeText(this, "Address copied", Toast.LENGTH_SHORT).show();
+        };
+    }
+
+    private TextView.OnClickListener copyToClipBoardTx() {
+        return v ->{
+            // Creates a new text clip to put on the clipboard
+            ClipData clip = ClipData.newPlainText("Tx copied", this.txString);
+            clipboardManager.setPrimaryClip(clip);
+            Toast.makeText(this, "Tx copied", Toast.LENGTH_SHORT).show();
+        };
     }
 
     private View.OnClickListener onBroadCastTx() {
@@ -113,37 +177,48 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
         };
     }
 
+    public  String compress(String string) throws IOException {
+//        ByteArrayOutputStream os = new ByteArrayOutputStream(string.length());
+//        GZIPOutputStream gos = new GZIPOutputStream(os);
+//        gos.write(string.getBytes());
+//        gos.close();
+//        String compressed = os.toString();
+//        os.close();
+//        return compressed;
 
-//    private void signInheritanceTx(View v) {
-//        WalletApplication application = getWalletApplication();
-//        Wallet wallet = application.getWallet();
-//
-//        Address ownerAddress = wallet.currentReceiveAddress();
-//
-//        InheritanceEntity heirEntity = inheritanceDao
-//                .getAll()
-//                .stream()
-//                .filter(entity -> "heirAddress".equals(entity.getLabel()))
-//                .findAny()
-//                .orElse(null);
-//
-//        if (heirEntity != null) {
-//            try {
-//                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirEntity.getAddress());
-//                Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
-//                signedTx = Hex.toHexString(tx.bitcoinSerialize());
-//                Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
-//            } catch (Exception exception) {
-//                Toast.makeText(this, "Failed to sign inheritance transaction: Some exception, see debug log... ", Toast.LENGTH_LONG).show();
-//            }
-//        } else {
-//            Toast.makeText(this, "Failed to sign inheritance transaction: Heir address is missing", Toast.LENGTH_LONG).show();
-//        }
-//
-//        //todo make this part of code not to crash application and show QR of inheritnace transaction
-////        final BitmapDrawable bitmap = new BitmapDrawable(getResources(), Qr.bitmap(this.signedTx));
-////        bitmap.setFilterBitmap(false);
-////        final ImageView imageView = findViewById(R.id.bitcoin_address_qr);
-////        imageView.setImageDrawable(bitmap);
-//    }
+        byte[] input = string.getBytes("ISO-8859-1");;
+
+        byte[] output = new byte[1000];
+        Deflater compresser = new Deflater();
+        compresser.setInput(input);
+        compresser.finish();
+        int compressedDataLength = compresser.deflate(output);
+        compresser.end();
+
+//        System.out.println(compressedDataLength);
+
+        //String out = Base64.getEncoder().encodeToString(output);
+
+
+        String out =new String(Arrays.copyOfRange(output, 0, compressedDataLength), "ISO-8859-1");
+
+//        System.out.println("decoded:" + out);
+
+        return out;
+    }
+
+    public  String decompress(byte[] compressed) throws IOException {
+        final int BUFFER_SIZE = 32;
+        ByteArrayInputStream is = new ByteArrayInputStream(compressed);
+        GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
+        StringBuilder string = new StringBuilder();
+        byte[] data = new byte[BUFFER_SIZE];
+        int bytesRead;
+        while ((bytesRead = gis.read(data)) != -1) {
+            string.append(new String(data, 0, bytesRead));
+        }
+        gis.close();
+        is.close();
+        return string.toString();
+    }
 }

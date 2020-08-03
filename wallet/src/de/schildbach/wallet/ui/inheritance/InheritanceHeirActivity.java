@@ -18,6 +18,8 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,10 +28,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.data.AppDatabase;
@@ -58,6 +65,9 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
     private InheritanceTxDao txDao;
     private List<TxEntity> txList = Collections.emptyList();
+
+    private EditText ownerAddressView;
+    private EditText txView;
 
 
     @Override
@@ -102,6 +112,31 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
             }
         });
 
+
+        ownerAddressView = findViewById(R.id.ownerAddress);
+        txView = findViewById(R.id.tx);
+
+        final Button addButton = findViewById(R.id.addTx);
+        addButton.setOnClickListener(onAddTxButtonListener());
+
+    }
+
+    private View.OnClickListener onAddTxButtonListener() {
+        return v->{
+            try {
+
+                String ownerAddress = ownerAddressView.getText().toString();
+                String tx = txView.getText().toString();
+
+                TxEntity in = new TxEntity(tx,ownerAddress, "heirAddress");
+                txDao.insertOrUpdate(in);
+
+            } catch (Exception exc) {
+                log.error(exc.toString());
+                Toast.makeText(InheritanceHeirActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
+            }
+
+        };
     }
 
     public void handleScan(final View clickView) {
@@ -117,7 +152,15 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
             if (resultCode == Activity.RESULT_OK) {
 
                 //TODO: btc address
-                final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+                 String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+
+                try {
+                    input = decompress(input);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (DataFormatException e) {
+                    e.printStackTrace();
+                }
 
                 adapter.add(input);
                 adapter.notifyDataSetChanged();
@@ -132,17 +175,41 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         }
     }
 
+    private String decompress(String str) throws IOException, DataFormatException {
+        Inflater inflater = new Inflater();
+
+        inflater.setInput(str.getBytes("ISO-8859-1"));
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(str.getBytes().length);
+
+        byte[] buffer = new byte[1024];
+
+        while (!inflater.finished()) {
+
+            int count = inflater.inflate(buffer);
+
+            outputStream.write(buffer, 0, count);
+
+        }
+
+        outputStream.close();
+
+//        byte[] output = outputStream.toByteArray();
+
+       return outputStream.toString();
+    }
+
     private void saveTx(String input) {
 
-            try {
-
-                TxEntity in = new TxEntity(input, "heirAddress");
-                txDao.insertOrUpdate(in);
-
-            } catch (Exception exc) {
-                log.error(exc.toString());
-                Toast.makeText(InheritanceHeirActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
-            }
+//            try {
+//
+//                TxEntity in = new TxEntity(input, "heirAddress");
+//                txDao.insertOrUpdate(in);
+//
+//            } catch (Exception exc) {
+//                log.error(exc.toString());
+//                Toast.makeText(InheritanceHeirActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
+//            }
 
     }
 
