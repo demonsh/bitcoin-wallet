@@ -19,11 +19,20 @@ package de.schildbach.wallet.util;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionBroadcast;
+import org.bitcoinj.core.TransactionBroadcaster;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
@@ -35,6 +44,9 @@ import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
@@ -63,36 +75,57 @@ public class Inheritance {
         return Address.fromString(networkParameters, "tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv");
     }
 
-    public static void withdrawFromInterimAddress(
+    public static Transaction getWithdrawTxFromInterimAddress(
             Address ownerAddress,
             Address heirAddress,
             int blocks,
             Wallet wallet
     ) throws Exception {
         Address addressToWidthrawTo = getAddressToWithdrawTo(ownerAddress, heirAddress, wallet);
-        Coin totalInheritedBalance = getInterimAddressInfo(ownerAddress, heirAddress, blocks, wallet).balance;
-
-        //TODO switch to real transaction when local storage is ready
-//        Transaction inheritnaceTx = getInheritanceTransactionFromLocalStorage();
-        Transaction inheritanceTx = signInheritanceTx(ownerAddress, heirAddress, blocks, wallet);
+        InterimAddressInfo interimAddressInfo = getInterimAddressInfo(ownerAddress, heirAddress, blocks, wallet);
+        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        Script p2wshScript = ScriptBuilder.createP2WSHOutputScript(redeemScript);
 
         Transaction tx = new Transaction(wallet.getNetworkParameters());
 
-        TransactionInput input = createInputToWithdrawFromInterimAddress(inheritanceTx, ownerAddress, heirAddress, blocks, wallet);
-        tx.addInput(input);
+        List<TransactionInput> inputs = getAllInputsToWithdrawFromInterimAddress(
+                interimAddressInfo.unspendTransactionOutputs,
+                wallet.getParams(),
+                inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks),
+                blocks
+        );
 
-        tx.addOutput(Coin.ZERO, addressToWidthrawTo);
-        Coin balanceToWithdraw = getMaxBalanceToWithdrawExceptFee(tx, totalInheritedBalance, wallet);
-        tx.getOutput(0).setValue(balanceToWithdraw);
 
-        TransactionSigner.ProposedTransaction proposedTransaction = new TransactionSigner.ProposedTransaction(tx);
-        LocalTransactionSigner localTransactionSigner = new LocalTransactionSigner();
-        localTransactionSigner.signInputs(proposedTransaction, wallet);
+        for(int i = 0; i < inputs.size(); i++) {
+            tx.addInput(inputs.get(i));
+            TransactionWitness witness = new TransactionWitness(2);
 
-        broadcastTx(tx, wallet);
+            Sha256Hash sigHash = tx.hashForWitnessSignature(
+                i,
+                p2wshScript,
+                inputs.get(i).getValue(), // why do we need value at all?
+                Transaction.SigHash.ALL,
+                false
+            );
+
+            ECKey.ECDSASignature sig = wallet.findKeyFromAddress(addressToWidthrawTo).sign(sigHash);
+            TransactionSignature txSig = new TransactionSignature(sig, Transaction.SigHash.ALL, false);
+
+            witness.setPush(0, txSig.encodeToBitcoin());
+            witness.setPush(1, redeemScript.getProgram());
+
+            tx.getInput(i).setWitness(witness);
+        }
+
+        tx.addOutput(
+                getMaxBalanceToWithdrawExceptFee(tx, interimAddressInfo.balance, wallet),
+                addressToWidthrawTo
+        );
+
+        return tx;
     }
 
-    public static void broadcastTx(Transaction tx, Wallet wallet) {
+    public static void broadcastTxViaSendRequest(Transaction tx, Wallet wallet) {
         try {
             wallet.sendCoins(SendRequest.forTx(tx));
         } catch (Exception e) {
@@ -100,17 +133,32 @@ public class Inheritance {
         }
     }
 
+    public static void broadcastTx2(Transaction tx, PeerGroup peerGroup) {
+        for (byte b : tx.bitcoinSerialize()) {
+            String st = String.format("%02X", b);
+            System.out.print(st);
+        }
+
+        peerGroup.broadcastTransaction(tx);
+    }
+
     public static InterimAddressInfo getInterimAddressInfo(
             Address ownerAddress,
             Address heirAddress,
             int blocks,
             Wallet wallet
-    ){
+    ) {
         InterimAddressInfo interimAddressInfo = new InterimAddressInfo();
         Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, wallet);
         //TODO make sure if there is a better way to get address balance than AddressBalance class from Internet
-        interimAddressInfo.balance = wallet.getBalance(new AddressBalance(interimAddress));
+        AddressBalance addressBalance = new AddressBalance(interimAddress);
+        interimAddressInfo.balance = wallet.getBalance(addressBalance);
         interimAddressInfo.blockTillDeadline = 0;  //TODO define real blockTillDeadline
+        interimAddressInfo.unspendTransactionOutputs = addressBalance.select(
+                wallet.getNetworkParameters().MAX_MONEY,
+                wallet.getWatchedOutputs(true)
+        ).gathered;
+
         return interimAddressInfo;
     }
 
@@ -181,20 +229,28 @@ public class Inheritance {
         return balance.subtract(Coin.valueOf(10000)); //TODO substract real fee based on size and satoshis per byte
     }
 
-    private static TransactionInput createInputToWithdrawFromInterimAddress(
-            Transaction inheritanceTx,
-            Address ownerAddress,
-            Address heirAddress,
-            int blocks,
-            Wallet wallet
+    private static List<TransactionInput> getAllInputsToWithdrawFromInterimAddress(
+            Collection<TransactionOutput> outputs,
+            NetworkParameters networkParameters,
+            Script redeemScript,
+            int blocks
     ) {
-        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
-        NetworkParameters params = wallet.getParams();
-        TransactionOutPoint outpoint = new TransactionOutPoint(params, 0, inheritanceTx);
-        TransactionInput input = new TransactionInput(params, inheritanceTx, redeemScript.getProgram(), outpoint);
+        List<TransactionInput> inputs = new ArrayList<>();
 
-        input.setSequenceNumber(blocks); //TODO blocks, probably, should be encoded into sequence before
-        return input;
+        for(TransactionOutput output : outputs) {
+
+            TransactionInput input = new TransactionInput(
+                    networkParameters,
+                    output.getParentTransaction(),
+                    redeemScript.getProgram(),
+                    new TransactionOutPoint(networkParameters, output.getIndex(), output.getParentTransaction()),
+                    output.getValue()
+            );
+            input.setSequenceNumber(blocks); //TODO blocks, probably, should be encoded into sequence before
+            inputs.add(input);
+        }
+
+        return inputs;
     }
 
     private static Address getAddressToWithdrawTo(Address ownerAddress, Address heirAddress, Wallet wallet) throws Exception {
