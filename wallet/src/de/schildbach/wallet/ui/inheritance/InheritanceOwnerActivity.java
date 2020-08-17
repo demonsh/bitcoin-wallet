@@ -18,6 +18,8 @@ import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,14 +63,16 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance);
+
+        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+
 
         contentView = findViewById(android.R.id.content);
         enterAnimation = buildEnterAnimation(contentView);
         levitateView = contentView.findViewWithTag("levitate");
+
 
         final View sendQrButton = findViewById(R.id.wallet_actions_send_qr);
         sendQrButton.setOnClickListener(v -> handleScan(v));
@@ -99,7 +103,46 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
             }
         });
 
+        final Button saveBtn = findViewById(R.id.addHeirAddreBtn);
+        saveBtn.setOnClickListener(onSaveClick());
+
     }
+
+    private View.OnClickListener onSaveClick() {
+        return v -> {
+
+            final EditText labelField = findViewById(R.id.heir_label);
+
+            String  name=labelField.getText().toString();
+
+            if("".equalsIgnoreCase(name)){
+                labelField.setHint("please enter hair name");
+                labelField.setError("please enter hair name");
+                return;
+            }
+
+            final EditText addEditText = findViewById(R.id.heir_address);
+            String address = addEditText.getText().toString();
+
+            if("".equalsIgnoreCase(name)){
+                labelField.setHint("please enter hair address");
+                labelField.setError("please enter hair address");
+                return;
+            }
+
+            InheritanceEntity in = new InheritanceEntity(addEditText.getText().toString(), name);
+            inheritanceDao.insertOrUpdate(in);
+
+            Toast.makeText(this, "Hair address saved", Toast.LENGTH_LONG);
+
+
+            list.clear();
+            list.addAll(inheritanceDao.getAll());
+
+            adapter.notifyDataSetChanged();
+        };
+    }
+
 
     public void handleScan(final View clickView) {
         // The animation must be ended because of several graphical glitching that happens when the
@@ -213,38 +256,27 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
                 //TODO: btc address
                 final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 
-                final Intent newIntent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerNewHair.class);
-                newIntent.putExtra("address", input);
-                startActivityForResult(newIntent, 0);
+                final EditText addEditText = findViewById(R.id.heir_address);
+                addEditText.setText(input);
+
+//                final Intent newIntent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerNewHair.class);
+//                newIntent.putExtra("address", input);
+//                startActivityForResult(newIntent, 0);
 
             }
 
-            if(resultCode == 100){
-                list.clear();
-                list.addAll(inheritanceDao.getAll());
-
-                adapter.notifyDataSetChanged();
-            }
+//            if(resultCode == 100){
+//                list.clear();
+//                list.addAll(inheritanceDao.getAll());
+//
+//                adapter.notifyDataSetChanged();
+//            }
         }
 
 
         super.onActivityResult(requestCode, resultCode, intent);
 
     }
-
-
-//    private void saveAddress(String input) {
-//
-//        try {
-//
-//            InheritanceEntity in = new InheritanceEntity(input, "heirAddress");
-//            inheritanceDao.insertOrUpdate(in);
-//        } catch (Exception exc) {
-//            log.error(exc.toString());
-//            Toast.makeText(InheritanceOwnerActivity.this, exc.getMessage(), Toast.LENGTH_LONG);
-//        }
-//
-//    }
 
     /**
      * Sign tx for hair
