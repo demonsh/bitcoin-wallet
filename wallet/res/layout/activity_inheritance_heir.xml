@@ -8,15 +8,24 @@
         android:layout_height="wrap_content"
         android:text="Heir - tx to spend" />
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="43dp"
-        android:id="@+id/ownerAddress"/>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="43dp"
-        android:id="@+id/tx"/>
+        android:id="@+id/label"
+        android:hint="Label"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/ownerAddress"
+        android:hint="Owner address"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/tx"
+        android:hint="Transaction"/>
 
     <Button
         android:layout_width="match_parent"
@@ -42,7 +51,8 @@
     <ListView
         android:id="@+id/list_inheritance"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10pt"
         android:drawSelectorOnTop="false" />
 
 </LinearLayout>

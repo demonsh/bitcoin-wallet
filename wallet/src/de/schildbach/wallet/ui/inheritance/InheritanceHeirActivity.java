@@ -127,9 +127,15 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
                 String ownerAddress = ownerAddressView.getText().toString();
                 String tx = txView.getText().toString();
+                String label = ((EditText)findViewById(R.id.label)).getText().toString();
 
-                TxEntity in = new TxEntity(tx,ownerAddress, "heirAddress");
+
+                TxEntity in = new TxEntity(tx,ownerAddress, label);
                 txDao.insertOrUpdate(in);
+                txList.add(in);
+
+                adapter.notifyDataSetChanged();
+                Toast.makeText(InheritanceHeirActivity.this, "Transaction added", Toast.LENGTH_LONG);
 
             } catch (Exception exc) {
                 log.error(exc.toString());
