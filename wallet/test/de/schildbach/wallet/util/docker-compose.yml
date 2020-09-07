@@ -1,0 +1,13 @@
+bitcoin-core:
+  image: ruimarinho/bitcoin-core
+  container_name: bitcoin-server
+  ports:
+    - "18443:18443"
+    - "18444:18444"
+  command:
+    -printtoconsole
+    -regtest=1
+    -rpcuser=user
+    -rpcpassword=pass
+    -rpcallowip=172.17.0.0/16
+    -rpcbind=0.0.0.0
