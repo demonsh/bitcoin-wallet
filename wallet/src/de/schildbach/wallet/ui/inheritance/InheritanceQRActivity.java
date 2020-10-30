@@ -35,6 +35,7 @@ import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
 import de.schildbach.wallet.util.Inheritance;
+import de.schildbach.wallet.util.InterimAddressInfo;
 import de.schildbach.wallet.util.Qr;
 
 public class InheritanceQRActivity extends AbstractWalletActivity {
@@ -130,6 +131,17 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
             } catch (Exception e) {
                 Toast.makeText(this, "Cannot compress qr code... ", Toast.LENGTH_LONG).show();
             }
+
+            //Check tx status
+            InterimAddressInfo interimAddressInfo = Inheritance.getInterimAddressInfo(
+                    Address.fromString(Constants.NETWORK_PARAMETERS, ownerAddress),
+                    Address.fromString(Constants.NETWORK_PARAMETERS, address),
+                    8,
+                    wallet);
+
+            final TextView txStatusView = findViewById(R.id.tx_status);
+
+            txStatusView.setText(String.valueOf(interimAddressInfo.blockTillDeadline));
         }
 
         addressView.setText(this.address);
@@ -140,9 +152,10 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
 
 
         Button broadcastBtn = findViewById(R.id.inheritance_broadcast);
-
         broadcastBtn.setOnClickListener(onBroadCastTx());
 
+        Button withdrawBtn = findViewById(R.id.withdraw);
+        withdrawBtn.setOnClickListener(onWithdraw());
 
     }
 
@@ -176,6 +189,25 @@ public class InheritanceQRActivity extends AbstractWalletActivity {
             Toast.makeText(this, "Tx sent", Toast.LENGTH_LONG).show();
         };
     }
+
+
+    private View.OnClickListener onWithdraw() {
+        return v -> {
+
+            try {
+                Inheritance.withdrawFromInterimAddress(
+                        Address.fromString(Constants.NETWORK_PARAMETERS, ownerAddress),
+                        Address.fromString(Constants.NETWORK_PARAMETERS, address),
+                        6,
+                        this.wallet);
+                finish();
+            } catch (Exception e) {
+                Toast.makeText(this, "Failed to withdraw tx...", Toast.LENGTH_LONG).show();
+            }
+            Toast.makeText(this, "Withdraw", Toast.LENGTH_LONG).show();
+        };
+    }
+
 
     public  String compress(String string) throws IOException {
 //        ByteArrayOutputStream os = new ByteArrayOutputStream(string.length());
