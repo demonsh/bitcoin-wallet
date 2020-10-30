@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -106,7 +107,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
 
                 final Intent intent = new Intent(InheritanceHeirActivity.this,InheritanceHeirDetailActivity.class);
-                intent.putExtra("tx", txList.get(i).getTx());
+                intent.putExtra("txEntity", txList.get(i));
                 startActivity(intent);
 
             }

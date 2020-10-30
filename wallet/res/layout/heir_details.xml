@@ -23,8 +23,15 @@
         android:text="Send tx"/>
 
     <TextView
-       android:text="some text"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"/>
+        android:id="@+id/tx_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/withdraw"
+
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:text="Withdraw from intermediate address" />
 
 </LinearLayout>
