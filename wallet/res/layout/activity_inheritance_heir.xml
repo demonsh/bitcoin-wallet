@@ -3,51 +3,6 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Heir - tx to spend" />
-
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="43dp"
-        android:id="@+id/label"
-        android:hint="Label"/>
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="43dp"
-        android:id="@+id/ownerAddress"
-        android:hint="Owner address"/>
-
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="43dp"
-        android:id="@+id/tx"
-        android:hint="Transaction"/>
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add"
-        android:id="@+id/addTx"/>
-
-
-    <ImageButton
-        android:id="@+id/wallet_actions_send_qr"
-        style="@style/My.Widget.ActionButton.Floating"
-        android:layout_width="42dp"
-        android:layout_height="42dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginLeft="@dimen/list_entry_padding_horizontal_cram"
-        android:layout_marginRight="@dimen/list_entry_padding_horizontal_cram"
-        android:backgroundTint="@color/fg_on_dark_bg_network_significant"
-        android:contentDescription="@string/button_scan"
-        android:src="@drawable/ic_photo_camera_white_24dp"
-        android:tint="@color/bg_action_bar" />
-
-
     <ListView
         android:id="@+id/list_inheritance"
         android:layout_width="match_parent"
