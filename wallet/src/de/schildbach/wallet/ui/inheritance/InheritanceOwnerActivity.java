@@ -13,6 +13,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
@@ -43,6 +45,8 @@ import de.schildbach.wallet.data.AppDatabase;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
+import de.schildbach.wallet.ui.inheritance.heir.NewHairTx;
+import de.schildbach.wallet.ui.inheritance.owner.NewOwnerTx;
 import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
@@ -68,19 +72,6 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
         this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
 
-
-        contentView = findViewById(android.R.id.content);
-        enterAnimation = buildEnterAnimation(contentView);
-        levitateView = contentView.findViewWithTag("levitate");
-
-
-        final View sendQrButton = findViewById(R.id.wallet_actions_send_qr);
-        sendQrButton.setOnClickListener(v -> handleScan(v));
-        CheatSheet.setup(sendQrButton);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1)
-            sendQrButton.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.fg_on_dark_bg_network_significant), PorterDuff.Mode.SRC_ATOP);
-
-
         final ListView listview = (ListView) findViewById(R.id.list_heir);
 
         list = inheritanceDao.getAll();
@@ -103,180 +94,19 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
             }
         });
 
-        final Button saveBtn = findViewById(R.id.addHeirAddreBtn);
-        saveBtn.setOnClickListener(onSaveClick());
-
     }
-
-    private View.OnClickListener onSaveClick() {
-        return v -> {
-
-            final EditText labelField = findViewById(R.id.heir_label);
-
-            String  name=labelField.getText().toString();
-
-            if("".equalsIgnoreCase(name)){
-                labelField.setHint("please enter hair name");
-                labelField.setError("please enter hair name");
-                return;
-            }
-
-            final EditText addEditText = findViewById(R.id.heir_address);
-            String address = addEditText.getText().toString();
-
-            if("".equalsIgnoreCase(name)){
-                labelField.setHint("please enter hair address");
-                labelField.setError("please enter hair address");
-                return;
-            }
-
-            InheritanceEntity in = new InheritanceEntity(addEditText.getText().toString(), name);
-            inheritanceDao.insertOrUpdate(in);
-
-            Toast.makeText(this, "Hair address saved", Toast.LENGTH_LONG);
-
-
-            list.clear();
-            list.addAll(inheritanceDao.getAll());
-
-            adapter.notifyDataSetChanged();
-        };
-    }
-
-
-    public void handleScan(final View clickView) {
-        // The animation must be ended because of several graphical glitching that happens when the
-        // Camera/SurfaceView is used while the animation is running.
-        enterAnimation.end();
-        ScanActivity.startForResult(this, clickView, 0);
-    }
-
-    private AnimatorSet buildEnterAnimation(final View contentView) {
-        final Drawable background = getWindow().getDecorView().getBackground();
-        final int duration = getResources().getInteger(android.R.integer.config_mediumAnimTime);
-        final Animator splashBackgroundFadeOut = AnimatorInflater.loadAnimator(this, R.animator.fade_out_drawable);
-        final Animator splashForegroundFadeOut = AnimatorInflater.loadAnimator(this, R.animator.fade_out_drawable);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            //TODO: class cust exc
-//            splashBackgroundFadeOut.setTarget(((LayerDrawable) background).getDrawable(1));
-//            splashForegroundFadeOut.setTarget(((LayerDrawable) background).getDrawable(2));
-        } else {
-            // skip this animation, as there is no splash icon
-            splashBackgroundFadeOut.setDuration(0);
-            splashForegroundFadeOut.setDuration(0);
-        }
-        final AnimatorSet fragmentEnterAnimation = new AnimatorSet();
-        final AnimatorSet.Builder fragmentEnterAnimationBuilder =
-                fragmentEnterAnimation.play(splashBackgroundFadeOut).with(splashForegroundFadeOut);
-
-        final View slideInLeftView = contentView.findViewWithTag("slide_in_left");
-        if (slideInLeftView != null) {
-            final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
-            slide.addUpdateListener(animator -> {
-                float animatedValue = (float) animator.getAnimatedValue();
-                slideInLeftView.setTranslationX(
-                        animatedValue * (slideInLeftView.getWidth() + slideInLeftView.getPaddingLeft()));
-            });
-            slide.setInterpolator(new DecelerateInterpolator());
-            slide.setDuration(duration);
-            slide.setTarget(slideInLeftView);
-            final Animator fadeIn = AnimatorInflater.loadAnimator(this, R.animator.fade_in_view);
-            fadeIn.setTarget(slideInLeftView);
-            fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
-        }
-
-        final View slideInRightView = contentView.findViewWithTag("slide_in_right");
-        if (slideInRightView != null) {
-            final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
-            slide.addUpdateListener(animator -> {
-                float animatedValue = (float) animator.getAnimatedValue();
-                slideInRightView.setTranslationX(
-                        animatedValue * (slideInRightView.getWidth() + slideInRightView.getPaddingRight()));
-            });
-            slide.setInterpolator(new DecelerateInterpolator());
-            slide.setDuration(duration);
-            slide.setTarget(slideInRightView);
-            final Animator fadeIn = AnimatorInflater.loadAnimator(this, R.animator.fade_in_view);
-            fadeIn.setTarget(slideInRightView);
-            fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
-        }
-
-        final View slideInTopView = contentView.findViewWithTag("slide_in_top");
-        if (slideInTopView != null) {
-            final ValueAnimator slide = ValueAnimator.ofFloat(-1.0f, 0.0f);
-            slide.addUpdateListener(animator -> {
-                float animatedValue = (float) animator.getAnimatedValue();
-                slideInTopView.setTranslationY(
-                        animatedValue * (slideInTopView.getHeight() + slideInTopView.getPaddingTop()));
-            });
-            slide.setInterpolator(new DecelerateInterpolator());
-            slide.setDuration(duration);
-            slide.setTarget(slideInTopView);
-            final Animator fadeIn = AnimatorInflater.loadAnimator(this, R.animator.fade_in_view);
-            fadeIn.setTarget(slideInTopView);
-            fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
-        }
-
-        final View slideInBottomView = contentView.findViewWithTag("slide_in_bottom");
-        if (slideInBottomView != null) {
-            final ValueAnimator slide = ValueAnimator.ofFloat(1.0f, 0.0f);
-            slide.addUpdateListener(animator -> {
-                float animatedValue = (float) animator.getAnimatedValue();
-                slideInBottomView.setTranslationY(
-                        animatedValue * (slideInBottomView.getHeight() + slideInBottomView.getPaddingBottom()));
-            });
-            slide.setInterpolator(new DecelerateInterpolator());
-            slide.setDuration(duration);
-            slide.setTarget(slideInBottomView);
-            final Animator fadeIn = AnimatorInflater.loadAnimator(this, R.animator.fade_in_view);
-            fadeIn.setTarget(slideInBottomView);
-            fragmentEnterAnimationBuilder.before(slide).before(fadeIn);
-        }
-
-        if (levitateView != null) {
-            final ObjectAnimator elevate = ObjectAnimator.ofFloat(levitateView, "elevation", 0.0f,
-                    levitateView.getElevation());
-            elevate.setDuration(duration);
-            fragmentEnterAnimationBuilder.before(elevate);
-            final Drawable levitateBackground = levitateView.getBackground();
-            final Animator fadeIn = AnimatorInflater.loadAnimator(this, R.animator.fade_in_drawable);
-            fadeIn.setTarget(levitateBackground);
-            fragmentEnterAnimationBuilder.before(fadeIn);
-        }
-
-        return fragmentEnterAnimation;
-    }
-
-
     @Override
-    public void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
-        if (requestCode == 0) {
-            if (resultCode == Activity.RESULT_OK) {
+    protected void onResume() {
+        super.onResume();
 
-                //TODO: btc address
-                final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+        list.clear();
+        list.addAll(inheritanceDao.getAll());
 
-                final EditText addEditText = findViewById(R.id.heir_address);
-                addEditText.setText(input);
-
-//                final Intent newIntent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerNewHair.class);
-//                newIntent.putExtra("address", input);
-//                startActivityForResult(newIntent, 0);
-
-            }
-
-//            if(resultCode == 100){
-//                list.clear();
-//                list.addAll(inheritanceDao.getAll());
-//
-//                adapter.notifyDataSetChanged();
-//            }
-        }
-
-
-        super.onActivityResult(requestCode, resultCode, intent);
-
+        adapter.notifyDataSetChanged();
     }
+
+
+
 
     /**
      * Sign tx for hair
@@ -348,5 +178,23 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
             return convertView;
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.hair_list_options, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        if (item.getItemId() == R.id.add) {
+
+            startActivity(new Intent(InheritanceOwnerActivity.this,
+                    NewOwnerTx.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
