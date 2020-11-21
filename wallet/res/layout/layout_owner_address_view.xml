@@ -2,16 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="7dp"
+    android:background="@color/bg_level1">
 
     <TextView
         android:id="@+id/description"
         android:layout_width="match_parent"
+        android:textColor="@color/fg_less_significant"
+        android:textSize="@dimen/font_size_small"
         android:layout_height="30dp"/>
 
     <TextView
         android:id="@+id/address"
         android:layout_width="match_parent"
+        android:textColor="@color/fg_less_significant"
+        android:textSize="@dimen/font_size_small"
         android:layout_height="30dp"/>
 
 </LinearLayout>
