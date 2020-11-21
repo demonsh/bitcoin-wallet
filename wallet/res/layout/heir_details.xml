@@ -3,35 +3,35 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:padding="7dp"
     android:gravity="center">
 
-
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:text="Duper super text"/>
-
-    <TextView
-        android:id="@+id/heir_tx"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"/>
-
-    <Button
-        android:id="@+id/send_inheritance_tx"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send tx"/>
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/tx_status"
+        android:text="Transaction status:"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tx_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <Button
-        android:id="@+id/withdraw"
-
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:text="Withdraw from intermediate address" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/heir_tx"
+        android:text="Raw transaction:"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/heir_tx"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

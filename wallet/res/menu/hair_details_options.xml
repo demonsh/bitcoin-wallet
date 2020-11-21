@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/send"
+        android:title="Send tx"/>
+
+    <item
+        android:id="@+id/withdraw"
+        android:title="Withdraw from intermediate address" />
+
+</menu>
