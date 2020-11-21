@@ -125,7 +125,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
 
             vDesc.setText(item.getLabel());
 
-            vAddr.setText(item.getTx());
+            vAddr.setText(item.getOwnerAddress());
 
             return convertView;
         }
