@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    android:paddingTop="20dp">
+
+<!--    Label-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/label"
+        android:text="Label"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/label"
+        android:hint="Label"/>
+
+<!--    Owner-->
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/ownerAddress"
+        android:text="Owner address"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/ownerAddress"
+        android:hint="Owner address"/>
+
+
+<!--    Tx-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/tx"
+        android:text="Transaction"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:minHeight="64dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/tx"
+        android:inputType="textMultiLine"
+        android:hint="Transaction"/>
+
+</LinearLayout>
