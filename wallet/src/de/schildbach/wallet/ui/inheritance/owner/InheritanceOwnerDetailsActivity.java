@@ -1,4 +1,4 @@
-package de.schildbach.wallet.ui.inheritance;
+package de.schildbach.wallet.ui.inheritance.owner;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -38,7 +38,7 @@ import de.schildbach.wallet.util.Inheritance;
 import de.schildbach.wallet.util.InterimAddressInfo;
 import de.schildbach.wallet.util.Qr;
 
-public class InheritanceQRActivity extends AbstractWalletActivity {
+public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
 
     /**
      * Heir's address

@@ -70,7 +70,7 @@
         tools:targetApi="24">
 
         <activity android:name="de.schildbach.wallet.ui.inheritance.InheritanceHeirDetailActivity"/>
-        <activity android:name="de.schildbach.wallet.ui.inheritance.InheritanceQRActivity" />
+        <activity android:name="de.schildbach.wallet.ui.inheritance.owner.InheritanceOwnerDetailsActivity" />
         <activity
             android:name="de.schildbach.wallet.ui.WalletActivity"
             android:configChanges="keyboard|keyboardHidden"

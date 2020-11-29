@@ -1,34 +1,22 @@
 package de.schildbach.wallet.ui.inheritance;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
@@ -45,10 +33,8 @@ import de.schildbach.wallet.data.AppDatabase;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
-import de.schildbach.wallet.ui.inheritance.heir.NewHairTx;
+import de.schildbach.wallet.ui.inheritance.owner.InheritanceOwnerDetailsActivity;
 import de.schildbach.wallet.ui.inheritance.owner.NewOwnerTx;
-import de.schildbach.wallet.ui.scan.ScanActivity;
-import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
 
 public final class InheritanceOwnerActivity extends AbstractWalletActivity {
@@ -87,7 +73,7 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
 
                 String address = list.get(i).getAddress();
 
-                final Intent intent = new Intent(InheritanceOwnerActivity.this, InheritanceQRActivity.class);
+                final Intent intent = new Intent(InheritanceOwnerActivity.this, InheritanceOwnerDetailsActivity.class);
                 intent.putExtra("address", address);
                 startActivity(intent);
 
