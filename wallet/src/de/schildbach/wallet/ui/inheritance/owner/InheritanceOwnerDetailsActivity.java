@@ -86,11 +86,6 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
                 String signedTx = Hex.toHexString(tx.bitcoinSerialize());
                 this.txString = signedTx;
 
-                String qrStr = ownerAddress + ";" + signedTx;
-
-                final ImageView address_qr = findViewById(R.id.address_qr);
-                address_qr.setImageBitmap(Qr.bitmap(qrStr));
-
                 InheritanceEntity inheritanceEntity = inheritanceDao.get(address);
                 inheritanceEntity.setTx(signedTx);
                 inheritanceEntity.setOwnerAddress(ownerAddress.toString());
@@ -115,22 +110,6 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
             NetworkParameters params = wallet.getParams();
             byte[] hex = Hex.decode(tx);
             this.tx = new Transaction(params, hex);
-
-            String qrStr = owner + ";" + tx;
-
-
-            try {
-                //String compressedStr = compress(qrStr);
-
-                final ImageView address_qr = findViewById(R.id.address_qr);
-//                address_qr.setImageBitmap(Qr.bitmap(compressedStr));
-
-
-                address_qr.setImageBitmap(Qr.bitmap(compress(qrStr)));
-
-            } catch (Exception e) {
-                Toast.makeText(this, "Cannot compress qr code... ", Toast.LENGTH_LONG).show();
-            }
 
             //Check tx status
             InterimAddressInfo interimAddressInfo = Inheritance.getInterimAddressInfo(
@@ -208,49 +187,4 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
         };
     }
 
-
-    public  String compress(String string) throws IOException {
-//        ByteArrayOutputStream os = new ByteArrayOutputStream(string.length());
-//        GZIPOutputStream gos = new GZIPOutputStream(os);
-//        gos.write(string.getBytes());
-//        gos.close();
-//        String compressed = os.toString();
-//        os.close();
-//        return compressed;
-
-        byte[] input = string.getBytes("ISO-8859-1");;
-
-        byte[] output = new byte[1000];
-        Deflater compresser = new Deflater();
-        compresser.setInput(input);
-        compresser.finish();
-        int compressedDataLength = compresser.deflate(output);
-        compresser.end();
-
-//        System.out.println(compressedDataLength);
-
-        //String out = Base64.getEncoder().encodeToString(output);
-
-
-        String out =new String(Arrays.copyOfRange(output, 0, compressedDataLength), "ISO-8859-1");
-
-//        System.out.println("decoded:" + out);
-
-        return out;
-    }
-
-    public  String decompress(byte[] compressed) throws IOException {
-        final int BUFFER_SIZE = 32;
-        ByteArrayInputStream is = new ByteArrayInputStream(compressed);
-        GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
-        StringBuilder string = new StringBuilder();
-        byte[] data = new byte[BUFFER_SIZE];
-        int bytesRead;
-        while ((bytesRead = gis.read(data)) != -1) {
-            string.append(new String(data, 0, bytesRead));
-        }
-        gis.close();
-        is.close();
-        return string.toString();
-    }
 }
