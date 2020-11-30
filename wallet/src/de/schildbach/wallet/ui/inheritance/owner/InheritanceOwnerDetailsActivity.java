@@ -5,6 +5,8 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -129,13 +131,6 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
         txView.setText(this.txString);
         txView.setOnClickListener(copyToClipBoardTx());
 
-
-        Button broadcastBtn = findViewById(R.id.inheritance_broadcast);
-        broadcastBtn.setOnClickListener(onBroadCastTx());
-
-        Button withdrawBtn = findViewById(R.id.withdraw);
-        withdrawBtn.setOnClickListener(onWithdraw());
-
     }
 
     private TextView.OnClickListener copyToClipBoardAddress() {
@@ -159,32 +154,66 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
     private View.OnClickListener onBroadCastTx() {
         return v -> {
 
-            try {
-                Inheritance.broadcastTx(this.tx, this.wallet);
-                finish();
-            } catch (Exception e) {
-                Toast.makeText(this, "Failed to send tx...", Toast.LENGTH_LONG).show();
-            }
-            Toast.makeText(this, "Tx sent", Toast.LENGTH_LONG).show();
+            broadcast();
         };
+    }
+
+    private void broadcast() {
+        try {
+            Inheritance.broadcastTx(this.tx, this.wallet);
+            finish();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to send tx...", Toast.LENGTH_LONG).show();
+        }
+        Toast.makeText(this, "Tx sent", Toast.LENGTH_LONG).show();
     }
 
 
     private View.OnClickListener onWithdraw() {
         return v -> {
 
-            try {
-                Inheritance.withdrawFromInterimAddress(
-                        Address.fromString(Constants.NETWORK_PARAMETERS, ownerAddress),
-                        Address.fromString(Constants.NETWORK_PARAMETERS, address),
-                        6,
-                        this.wallet);
-                finish();
-            } catch (Exception e) {
-                Toast.makeText(this, "Failed to withdraw tx...", Toast.LENGTH_LONG).show();
-            }
-            Toast.makeText(this, "Withdraw", Toast.LENGTH_LONG).show();
+            withdraw();
         };
+    }
+
+    private void withdraw() {
+        try {
+            Inheritance.withdrawFromInterimAddress(
+                    Address.fromString(Constants.NETWORK_PARAMETERS, ownerAddress),
+                    Address.fromString(Constants.NETWORK_PARAMETERS, address),
+                    6,
+                    this.wallet);
+            finish();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to withdraw tx...", Toast.LENGTH_LONG).show();
+        }
+        Toast.makeText(this, "Withdraw", Toast.LENGTH_LONG).show();
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.hair_details_options, menu);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+
+        if (item.getItemId() == R.id.send) {
+
+            broadcast();
+            return true;
+        }
+
+        if (item.getItemId() == R.id.withdraw) {
+
+            withdraw();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }
