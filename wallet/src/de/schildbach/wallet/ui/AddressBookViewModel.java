@@ -15,30 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package de.schildbach.wallet.ui;
 
-import static androidx.core.util.Preconditions.checkNotNull;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+import org.bitcoinj.core.Address;
 
 /**
  * @author Andreas Schildbach
  */
-public class ExchangeRate {
-    public ExchangeRate(final org.bitcoinj.utils.ExchangeRate rate, final String source) {
-        checkNotNull(rate.fiat.currencyCode);
-
-        this.rate = rate;
-        this.source = source;
-    }
-
-    public final org.bitcoinj.utils.ExchangeRate rate;
-    public final String source;
-
-    public String getCurrencyCode() {
-        return rate.fiat.currencyCode;
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + '[' + rate.fiat + ']';
-    }
+public class AddressBookViewModel extends ViewModel {
+    public final MutableLiveData<Address> selectedAddress = new MutableLiveData<>();
+    public final MutableLiveData<Event<Integer>> pageTo = new MutableLiveData<>();
+    public final MutableLiveData<Event<Address>> showEditAddressBookEntryDialog = new MutableLiveData<>();
+    public final MutableLiveData<Event<Void>> showScanOwnAddressDialog = new MutableLiveData<>();
+    public final MutableLiveData<Event<Void>> showScanInvalidDialog = new MutableLiveData<>();
 }

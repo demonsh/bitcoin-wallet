@@ -17,7 +17,6 @@
   <string name="wallet_balance_fragment_too_much">هذه كمية مال عالية قليلة لحفظها في جيبك. نرجوا نقلها لمكان اكثر اماناً.</string>
   <string name="wallet_balance_fragment_replaying">الرصيد غير متاح في حالة إعادة التشغيل.</string>
   <string name="exchange_rates_activity_title">اسعار الصرف</string>
-  <string name="exchange_rates_fragment_empty_text">لا يمكن تحميل اسعار الصرف.</string>
   <string name="exchange_rates_fragment_empty_search">لا يمكن إيجاد اسعار الصرف.</string>
   <string name="exchange_rates_fragment_default">(افتراضي)</string>
   <string name="exchange_rates_fragment_rate">نسبة</string>
@@ -125,10 +124,6 @@
   <string name="address_book_context_edit_title">تعديل العنوان</string>
   <string name="address_book_context_remove_title">حذف العنوان</string>
   <string name="address_book_context_copy_to_clipboard_title">نسخ إلى الحافظة</string>
-  <string name="address_book_options_paste_from_clipboard_title">لصق من الحافظة</string>
-  <string name="address_book_options_paste_from_clipboard_empty">الحافظة خالية</string>
-  <string name="address_book_options_paste_from_clipboard_invalid">بيانات الحافظة لا يمكن التعرف عليها</string>
-  <string name="address_book_options_paste_from_clipboard_own_address">العنوان على الحافظة ملكك.</string>
   <string name="address_book_options_scan_title">مسح عنوان</string>
   <string name="address_book_options_scan_invalid">البيانات الممسوحة بصريا لا يمكن التعرف عليها</string>
   <string name="address_book_options_scan_own_address">العنوان الذي تم مسحه هو ملكك.</string>
@@ -218,7 +213,6 @@
   <string name="report_issue_dialog_description">وصف المشكلة</string>
   <string name="report_issue_dialog_report">إبلاغ</string>
   <string name="report_issue_dialog_collect_device_info">إرفاق معلومات الجهاز</string>
-  <string name="report_issue_dialog_collect_installed_packages">إرفاق قائمة بالحزم المثبتة</string>
   <string name="report_issue_dialog_collect_application_log">إرفاق سجل البرنامج</string>
   <string name="report_issue_dialog_collect_wallet_dump">إرفاق مهملات المحفظة</string>
   <string name="report_issue_dialog_mail_intent_chooser">إرسال التقرير بواسطة…</string>

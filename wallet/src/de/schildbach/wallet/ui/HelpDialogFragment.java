@@ -17,9 +17,6 @@
 
 package de.schildbach.wallet.ui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -27,6 +24,8 @@ import android.os.Bundle;
 import android.text.Html;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
@@ -72,8 +71,7 @@ public final class HelpDialogFragment extends DialogFragment {
         final Bundle args = getArguments();
         final int messageResId = args.getInt(KEY_MESSAGE);
 
-        final DialogBuilder dialog = new DialogBuilder(activity);
-        dialog.setMessage(Html.fromHtml(getString(messageResId)));
+        final DialogBuilder dialog = DialogBuilder.dialog(activity, 0, Html.fromHtml(getString(messageResId)));
         dialog.singleDismissButton(null);
         return dialog.create();
     }

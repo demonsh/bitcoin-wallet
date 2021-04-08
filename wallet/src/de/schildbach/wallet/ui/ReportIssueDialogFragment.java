@@ -17,6 +17,40 @@
 
 package de.schildbach.wallet.ui;
 
+import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.admin.DevicePolicyManager;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.pm.PackageInfo;
+import android.content.res.Resources;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
+import com.google.common.base.Joiner;
+import de.schildbach.wallet.BuildConfig;
+import de.schildbach.wallet.Configuration;
+import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.util.Bluetooth;
+import de.schildbach.wallet.util.CrashReporter;
+import de.schildbach.wallet.util.Installer;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.script.ScriptException;
+import org.bitcoinj.wallet.Wallet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
@@ -27,43 +61,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
-
-import android.net.Uri;
-import de.schildbach.wallet.BuildConfig;
-import de.schildbach.wallet.R;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.script.ScriptException;
-import org.bitcoinj.wallet.Wallet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
-
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.util.Bluetooth;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.Installer;
-
-import android.app.ActivityManager;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.admin.DevicePolicyManager;
-import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.pm.PackageInfo;
-import android.content.res.Resources;
-import android.os.Build;
-import android.os.Bundle;
-import android.widget.Button;
-import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
 
 /**
  * @author Andreas Schildbach
@@ -95,7 +92,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
 
     private Button positiveButton;
 
-    private ReportIssueViewModel viewModel;
+    private AbstractWalletActivityViewModel walletActivityViewModel;
 
     private static final Logger log = LoggerFactory.getLogger(ReportIssueDialogFragment.class);
 
@@ -111,7 +108,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         log.info("opening dialog {}", getClass().getName());
 
-        viewModel = new ViewModelProvider(this).get(ReportIssueViewModel.class);
+        walletActivityViewModel = new ViewModelProvider(activity).get(AbstractWalletActivityViewModel.class);
     }
 
     @Override
@@ -133,8 +130,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
                 if (installer != null)
                     builder.append(", installer ").append(installer);
                 builder.append(", android ").append(Build.VERSION.RELEASE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                    builder.append(" (").append(Build.VERSION.SECURITY_PATCH).append(")");
+                builder.append(" (").append(Build.VERSION.SECURITY_PATCH).append(")");
                 builder.append(", ").append(Build.MANUFACTURER);
                 if (!Build.BRAND.equalsIgnoreCase(Build.MANUFACTURER))
                     builder.append(' ').append(Build.BRAND);
@@ -168,7 +164,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
                 if (contextualTransactionHash == null)
                     return null;
 
-                final Wallet wallet = viewModel.wallet.getValue();
+                final Wallet wallet = walletActivityViewModel.wallet.getValue();
                 final Transaction tx = wallet.getTransaction(contextualTransactionHash);
                 final StringBuilder contextualData = new StringBuilder();
                 try {
@@ -192,7 +188,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
 
             @Override
             protected CharSequence collectWalletDump() {
-                return viewModel.wallet.getValue().toString(false, false, null, true, true, null);
+                return walletActivityViewModel.wallet.getValue().toString(false, false, null, true, true, null);
             }
         };
         final AlertDialog dialog = builder.create();
@@ -201,7 +197,7 @@ public class ReportIssueDialogFragment extends DialogFragment {
             positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
             positiveButton.setEnabled(false);
 
-            viewModel.wallet.observe(ReportIssueDialogFragment.this, wallet -> positiveButton.setEnabled(true));
+            walletActivityViewModel.wallet.observe(ReportIssueDialogFragment.this, wallet -> positiveButton.setEnabled(true));
         });
 
         return dialog;
@@ -261,7 +257,8 @@ public class ReportIssueDialogFragment extends DialogFragment {
         report.append("Time of last blockchain reset: ").append(lastBlockchainResetTime > 0
                 ? String.format(Locale.US, "%tF %tT %tZ", calendar, calendar, calendar) : "none").append("\n");
         report.append("Network: ").append(Constants.NETWORK_PARAMETERS.getId()).append("\n");
-        final Wallet wallet = viewModel.wallet.getValue();
+        report.append("Sync mode: ").append(config.getSyncMode().name()).append("\n");
+        final Wallet wallet = walletActivityViewModel.wallet.getValue();
         report.append("Encrypted: ").append(String.valueOf(wallet.isEncrypted())).append("\n");
         report.append("Keychain size: ").append(String.valueOf(wallet.getKeyChainGroupSize())).append("\n");
 
@@ -327,9 +324,9 @@ public class ReportIssueDialogFragment extends DialogFragment {
 
         report.append("Manufacturer: ").append(Build.MANUFACTURER).append("\n");
         report.append("Device Model: ").append(Build.MODEL).append("\n");
-        report.append("Android Version: ").append(Build.VERSION.RELEASE).append("\n");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            report.append("Android security patch level: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
+        report.append("Android Version: ").append(Build.VERSION.RELEASE)
+                .append(" (").append(Integer.toString(Build.VERSION.SDK_INT)).append(")\n");
+        report.append("Android security patch level: ").append(Build.VERSION.SECURITY_PATCH).append("\n");
         report.append("ABIs: ").append(Joiner.on(", ").skipNulls().join(Build.SUPPORTED_ABIS)).append("\n");
         report.append("Board: ").append(Build.BOARD).append("\n");
         report.append("Brand: ").append(Build.BRAND).append("\n");

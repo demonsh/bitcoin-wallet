@@ -17,71 +17,6 @@
 
 package de.schildbach.wallet.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.Block;
-import org.bitcoinj.core.BlockChain;
-import org.bitcoinj.core.CheckpointManager;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.FilteredBlock;
-import org.bitcoinj.core.Peer;
-import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence.ConfidenceType;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.core.listeners.AbstractPeerDataEventListener;
-import org.bitcoinj.core.listeners.PeerConnectedEventListener;
-import org.bitcoinj.core.listeners.PeerDataEventListener;
-import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
-import org.bitcoinj.net.discovery.MultiplexingDiscovery;
-import org.bitcoinj.net.discovery.PeerDiscovery;
-import org.bitcoinj.net.discovery.PeerDiscoveryException;
-import org.bitcoinj.store.BlockStore;
-import org.bitcoinj.store.BlockStoreException;
-import org.bitcoinj.store.SPVBlockStore;
-import org.bitcoinj.utils.MonetaryFormat;
-import org.bitcoinj.utils.Threading;
-import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
-import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Stopwatch;
-
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.WalletBalanceWidgetProvider;
-import de.schildbach.wallet.data.AddressBookDao;
-import de.schildbach.wallet.data.AppDatabase;
-import de.schildbach.wallet.data.ExchangeRate;
-import de.schildbach.wallet.data.SelectedExchangeRateLiveData;
-import de.schildbach.wallet.data.WalletBalanceLiveData;
-import de.schildbach.wallet.data.WalletLiveData;
-import de.schildbach.wallet.service.BlockchainState.Impediment;
-import de.schildbach.wallet.ui.WalletActivity;
-import de.schildbach.wallet.util.CrashReporter;
-import de.schildbach.wallet.util.WalletUtils;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -94,20 +29,82 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.Process;
 import android.text.format.DateUtils;
 import androidx.annotation.MainThread;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+import com.google.common.base.Stopwatch;
+import com.google.common.net.HostAndPort;
+import de.schildbach.wallet.Configuration;
+import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.WalletBalanceWidgetProvider;
+import de.schildbach.wallet.addressbook.AddressBookDao;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;
+import de.schildbach.wallet.data.SelectedExchangeRateLiveData;
+import de.schildbach.wallet.data.WalletBalanceLiveData;
+import de.schildbach.wallet.data.WalletLiveData;
+import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
+import de.schildbach.wallet.service.BlockchainState.Impediment;
+import de.schildbach.wallet.ui.WalletActivity;
+import de.schildbach.wallet.ui.preference.ResolveDnsTask;
+import de.schildbach.wallet.util.CrashReporter;
+import de.schildbach.wallet.util.WalletUtils;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.CheckpointManager;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.FilteredBlock;
+import org.bitcoinj.core.Peer;
+import org.bitcoinj.core.PeerAddress;
+import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionBroadcast;
+import org.bitcoinj.core.TransactionConfidence.ConfidenceType;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VersionMessage;
+import org.bitcoinj.core.listeners.AbstractPeerDataEventListener;
+import org.bitcoinj.core.listeners.PeerConnectedEventListener;
+import org.bitcoinj.core.listeners.PeerDataEventListener;
+import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
+import org.bitcoinj.store.BlockStore;
+import org.bitcoinj.store.BlockStoreException;
+import org.bitcoinj.store.SPVBlockStore;
+import org.bitcoinj.utils.MonetaryFormat;
+import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static androidx.core.util.Preconditions.checkState;
 
@@ -130,6 +127,8 @@ public class BlockchainService extends LifecycleService {
     private PeerGroup peerGroup;
 
     private final Handler handler = new Handler();
+    private HandlerThread backgroundThread;
+    private Handler backgroundHandler;
     private final Handler delayHandler = new Handler();
     private WakeLock wakeLock;
 
@@ -151,9 +150,6 @@ public class BlockchainService extends LifecycleService {
             + ".cancel_coins_received";
     private static final String ACTION_RESET_BLOCKCHAIN = BlockchainService.class.getPackage().getName()
             + ".reset_blockchain";
-    private static final String ACTION_BROADCAST_TRANSACTION = BlockchainService.class.getPackage().getName()
-            + ".broadcast_transaction";
-    private static final String ACTION_BROADCAST_TRANSACTION_HASH = "hash";
 
     private static final Logger log = LoggerFactory.getLogger(BlockchainService.class);
 
@@ -169,13 +165,6 @@ public class BlockchainService extends LifecycleService {
         // implicitly stops blockchain service
         ContextCompat.startForegroundService(context,
                 new Intent(BlockchainService.ACTION_RESET_BLOCKCHAIN, null, context, BlockchainService.class));
-    }
-
-    public static void broadcastTransaction(final Context context, final Transaction tx) {
-        final Intent intent = new Intent(BlockchainService.ACTION_BROADCAST_TRANSACTION, null, context,
-                BlockchainService.class);
-        intent.putExtra(BlockchainService.ACTION_BROADCAST_TRANSACTION_HASH, tx.getTxId().getBytes());
-        ContextCompat.startForegroundService(context, intent);
     }
 
     private static class NewTransactionLiveData extends LiveData<Transaction> {
@@ -257,7 +246,7 @@ public class BlockchainService extends LifecycleService {
         childNotification.setGroup(Constants.NOTIFICATION_GROUP_KEY_RECEIVED);
         childNotification.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
         childNotification.setWhen(System.currentTimeMillis());
-        childNotification.setColor(ContextCompat.getColor(this, R.color.fg_network_significant));
+        childNotification.setColor(getColor(R.color.fg_network_significant));
         childNotification.setSmallIcon(R.drawable.stat_notify_received_24dp);
         final String msg = getString(R.string.notification_coins_received_msg, btcFormat.format(amount)) + msgSuffix;
         childNotification.setTicker(msg);
@@ -428,7 +417,8 @@ public class BlockchainService extends LifecycleService {
 
     private final SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener =
             (sharedPreferences, key) -> {
-                if (Configuration.PREFS_KEY_TRUSTED_PEER.equals(key) || Configuration.PREFS_KEY_TRUSTED_PEER_ONLY.equals(key))
+                if (Configuration.PREFS_KEY_SYNC_MODE.equals(key) || Configuration.PREFS_KEY_TRUSTED_PEERS.equals(key) ||
+                        Configuration.PREFS_KEY_TRUSTED_PEERS_ONLY.equals(key))
                     stopSelf();
             };
 
@@ -444,7 +434,6 @@ public class BlockchainService extends LifecycleService {
         delayHandler.postDelayed(delayedStopSelfRunnable, ms);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private final BroadcastReceiver deviceIdleModeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
@@ -491,8 +480,8 @@ public class BlockchainService extends LifecycleService {
         log.info("acquiring {}", wakeLock);
         wakeLock.acquire();
 
-        connectivityNotification.setColor(ContextCompat.getColor(this, R.color.fg_network_significant));
-        connectivityNotification.setContentTitle(getString(config.isTrustedPeerOnly() ?
+        connectivityNotification.setColor(getColor(R.color.fg_network_significant));
+        connectivityNotification.setContentTitle(getString(config.isTrustedPeersOnly() ?
                 R.string.notification_connectivity_syncing_trusted_peer :
                 R.string.notification_connectivity_syncing_message));
         connectivityNotification.setContentIntent(PendingIntent.getActivity(BlockchainService.this, 0,
@@ -502,13 +491,16 @@ public class BlockchainService extends LifecycleService {
         connectivityNotification.setPriority(NotificationCompat.PRIORITY_LOW);
         startForeground(0);
 
-        addressBookDao = AppDatabase.getDatabase(application).addressBookDao();
+        backgroundThread = new HandlerThread("backgroundThread", Process.THREAD_PRIORITY_BACKGROUND);
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+
+        addressBookDao = AddressBookDatabase.getDatabase(application).addressBookDao();
         blockChainFile = new File(getDir("blockstore", Context.MODE_PRIVATE), Constants.Files.BLOCKCHAIN_FILENAME);
 
         config.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            registerReceiver(deviceIdleModeReceiver, new IntentFilter(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED));
+        registerReceiver(deviceIdleModeReceiver, new IntentFilter(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED));
 
         peerConnectivityListener = new PeerConnectivityListener();
 
@@ -516,14 +508,18 @@ public class BlockchainService extends LifecycleService {
 
         final WalletBalanceLiveData walletBalance = new WalletBalanceLiveData(application);
         final SelectedExchangeRateLiveData exchangeRate = new SelectedExchangeRateLiveData(application);
-        walletBalance.observe(this, balance -> WalletBalanceWidgetProvider.updateWidgets(BlockchainService.this,
-                balance,
-                exchangeRate.getValue()));
+        walletBalance.observe(this, balance -> {
+            final ExchangeRateEntry rate = exchangeRate.getValue();
+            if (balance != null)
+                WalletBalanceWidgetProvider.updateWidgets(BlockchainService.this, balance,
+                        rate != null ? rate.exchangeRate() : null);
+        });
         if (Constants.ENABLE_EXCHANGE_RATES) {
             exchangeRate.observe(this, rate -> {
                 final Coin balance = walletBalance.getValue();
                 if (balance != null)
-                    WalletBalanceWidgetProvider.updateWidgets(BlockchainService.this, balance, rate);
+                    WalletBalanceWidgetProvider.updateWidgets(BlockchainService.this, balance,
+                            rate != null ? rate.exchangeRate() : null);
             });
         }
         wallet = new WalletLiveData(application);
@@ -618,61 +614,54 @@ public class BlockchainService extends LifecycleService {
                     CrashReporter.saveBackgroundTrace(new RuntimeException(message), application.packageInfo());
                 }
 
+                final Configuration.SyncMode syncMode = config.getSyncMode();
                 peerGroup = new PeerGroup(Constants.NETWORK_PARAMETERS, blockChain);
-                log.info("creating {}", peerGroup);
+                log.info("creating {}, sync mode: {}", peerGroup, syncMode);
                 peerGroup.setDownloadTxDependencies(0); // recursive implementation causes StackOverflowError
                 peerGroup.addWallet(wallet);
+                peerGroup.setBloomFilteringEnabled(syncMode == Configuration.SyncMode.CONNECTION_FILTER);
                 peerGroup.setUserAgent(Constants.USER_AGENT, application.packageInfo().versionName);
                 peerGroup.addConnectedEventListener(peerConnectivityListener);
                 peerGroup.addDisconnectedEventListener(peerConnectivityListener);
 
                 final int maxConnectedPeers = application.maxConnectedPeers();
-                final String trustedPeerHost = config.getTrustedPeerHost();
-                final boolean trustedPeerOnly = config.isTrustedPeerOnly();
+                final Set<HostAndPort> trustedPeers = config.getTrustedPeers();
+                final boolean trustedPeerOnly = config.isTrustedPeersOnly();
 
-                peerGroup.setMaxConnections(trustedPeerOnly ? 1 : maxConnectedPeers);
+                peerGroup.setMaxConnections(trustedPeerOnly ? 0 : maxConnectedPeers);
                 peerGroup.setConnectTimeoutMillis(Constants.PEER_TIMEOUT_MS);
                 peerGroup.setPeerDiscoveryTimeoutMillis(Constants.PEER_DISCOVERY_TIMEOUT_MS);
+                peerGroup.setStallThreshold(20, Block.HEADER_SIZE * 10);
 
-                peerGroup.addPeerDiscovery(new PeerDiscovery() {
-                    private final PeerDiscovery normalPeerDiscovery = MultiplexingDiscovery
-                            .forServices(Constants.NETWORK_PARAMETERS, 0);
-
+                final ResolveDnsTask resolveDnsTask = new ResolveDnsTask(backgroundHandler) {
                     @Override
-                    public InetSocketAddress[] getPeers(final long services, final long timeoutValue,
-                            final TimeUnit timeoutUnit) throws PeerDiscoveryException {
-                        final List<InetSocketAddress> peers = new LinkedList<>();
-
-                        boolean needsTrimPeersWorkaround = false;
-
-                        if (trustedPeerHost != null) {
-                            log.info("trusted peer '" + trustedPeerHost + "'" + (trustedPeerOnly ? " only" : ""));
-
-                            final InetSocketAddress addr = new InetSocketAddress(trustedPeerHost,
-                                    Constants.NETWORK_PARAMETERS.getPort());
-                            if (addr.getAddress() != null) {
-                                peers.add(addr);
-                                needsTrimPeersWorkaround = true;
-                            }
+                    protected void onSuccess(final HostAndPort hostAndPort, final InetSocketAddress socketAddress) {
+                        log.info("trusted peer '{}' resolved to {}", hostAndPort,
+                                socketAddress.getAddress().getHostAddress());
+                        if (socketAddress != null) {
+                            peerGroup.addAddress(new PeerAddress(Constants.NETWORK_PARAMETERS, socketAddress), 10);
+                            if (peerGroup.getMaxConnections() > maxConnectedPeers)
+                                peerGroup.setMaxConnections(maxConnectedPeers);
                         }
-
-                        if (!trustedPeerOnly)
-                            peers.addAll(
-                                    Arrays.asList(normalPeerDiscovery.getPeers(services, timeoutValue, timeoutUnit)));
-
-                        // workaround because PeerGroup will shuffle peers
-                        if (needsTrimPeersWorkaround)
-                            while (peers.size() >= maxConnectedPeers)
-                                peers.remove(peers.size() - 1);
-
-                        return peers.toArray(new InetSocketAddress[0]);
                     }
 
                     @Override
-                    public void shutdown() {
-                        normalPeerDiscovery.shutdown();
+                    protected void onUnknownHost(final HostAndPort hostAndPort) {
+                        log.info("trusted peer '{}' unknown host", hostAndPort);
                     }
-                });
+                };
+                for (final HostAndPort trustedPeer : trustedPeers)
+                    resolveDnsTask.resolve(trustedPeer);
+
+                if (trustedPeerOnly) {
+                    log.info("trusted peers only – not adding any random nodes from the P2P network");
+                } else {
+                    log.info("adding random peers from the P2P network");
+                    if (syncMode == Configuration.SyncMode.CONNECTION_FILTER)
+                        peerGroup.setRequiredServices(VersionMessage.NODE_BLOOM | VersionMessage.NODE_WITNESS);
+                    else
+                        peerGroup.setRequiredServices(VersionMessage.NODE_WITNESS);
+                }
 
                 // start peergroup
                 log.info("starting {} asynchronously", peerGroup);
@@ -716,17 +705,6 @@ public class BlockchainService extends LifecycleService {
                 stopSelf();
                 if (isBound.get())
                     log.info("stop is deferred because service still bound");
-            } else if (BlockchainService.ACTION_BROADCAST_TRANSACTION.equals(action)) {
-                final Sha256Hash hash = Sha256Hash
-                        .wrap(intent.getByteArrayExtra(BlockchainService.ACTION_BROADCAST_TRANSACTION_HASH));
-                final Transaction tx = application.getWallet().getTransaction(hash);
-
-                if (peerGroup != null) {
-                    log.info("broadcasting transaction {}", tx.getTxId());
-                    peerGroup.broadcastTransaction(tx);
-                } else {
-                    log.info("peergroup not available, not broadcasting transaction {}", tx.getTxId());
-                }
             }
         } else {
             log.warn("service restart, although it was started as non-sticky");
@@ -751,6 +729,9 @@ public class BlockchainService extends LifecycleService {
 
         delayHandler.removeCallbacksAndMessages(null);
 
+        backgroundHandler.removeCallbacksAndMessages(null);
+        backgroundThread.getLooper().quit();
+
         if (blockStore != null) {
             try {
                 blockStore.close();
@@ -766,8 +747,7 @@ public class BlockchainService extends LifecycleService {
             blockChainFile.delete();
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            unregisterReceiver(deviceIdleModeReceiver);
+        unregisterReceiver(deviceIdleModeReceiver);
 
         config.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener);
 
@@ -796,6 +776,17 @@ public class BlockchainService extends LifecycleService {
     }
 
     @Nullable
+    public TransactionBroadcast broadcastTransaction(final Transaction tx) {
+        if (peerGroup != null) {
+            log.info("broadcasting transaction {}", tx.getTxId());
+            return peerGroup.broadcastTransaction(tx);
+        } else {
+            log.info("peergroup not available, not broadcasting transaction {}", tx.getTxId());
+            return null;
+        }
+    }
+
+    @Nullable
     public BlockchainState getBlockchainState() {
         if (blockChain == null)
             return null;
@@ -814,6 +805,12 @@ public class BlockchainService extends LifecycleService {
             return null;
 
         return peerGroup.getConnectedPeers();
+    }
+
+    public void dropAllPeers() {
+        if (peerGroup == null)
+            return;
+        peerGroup.dropAllPeers();
     }
 
     @Nullable
@@ -838,7 +835,7 @@ public class BlockchainService extends LifecycleService {
     }
 
     private void startForeground(final int numPeers) {
-        if (config.isTrustedPeerOnly()) {
+        if (config.isTrustedPeersOnly()) {
             connectivityNotification.setSmallIcon(R.drawable.stat_notify_peers, numPeers > 0 ? 4 : 0);
             connectivityNotification.setContentText(getString(numPeers > 0 ? R.string.notification_peer_connected :
                     R.string.notification_peer_not_connected));

@@ -17,19 +17,6 @@
 
 package de.schildbach.wallet.ui;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.utils.Fiat;
-
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.ExchangeRate;
-import de.schildbach.wallet.service.BlockchainState;
-import de.schildbach.wallet.ui.send.FeeCategory;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -40,12 +27,21 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import de.schildbach.wallet.Configuration;
+import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.exchangerate.ExchangeRateEntry;
+import de.schildbach.wallet.service.BlockchainState;
+import de.schildbach.wallet.ui.send.FeeCategory;
+import de.schildbach.wallet.ui.send.SendCoinsActivity;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.utils.Fiat;
 
 /**
  * @author Andreas Schildbach
@@ -160,7 +156,7 @@ public final class WalletBalanceFragment extends Fragment {
     private void updateView() {
         final BlockchainState blockchainState = application.blockchainState.getValue();
         final Coin balance = viewModel.getBalance().getValue();
-        final ExchangeRate exchangeRate = viewModel.getExchangeRate().getValue();
+        final ExchangeRateEntry exchangeRate = viewModel.getExchangeRate().getValue();
 
         final boolean showProgress;
 
@@ -204,12 +200,12 @@ public final class WalletBalanceFragment extends Fragment {
 
                 if (showLocalBalance) {
                     if (exchangeRate != null) {
-                        final Fiat localValue = exchangeRate.rate.coinToFiat(balance);
+                        final Fiat localValue = exchangeRate.exchangeRate().coinToFiat(balance);
                         viewBalanceLocal.setVisibility(View.VISIBLE);
                         viewBalanceLocal.setFormat(Constants.LOCAL_FORMAT.code(0,
                                 Constants.PREFIX_ALMOST_EQUAL_TO + exchangeRate.getCurrencyCode()));
                         viewBalanceLocal.setAmount(localValue);
-                        viewBalanceLocal.setTextColor(ContextCompat.getColor(activity, R.color.fg_less_significant));
+                        viewBalanceLocal.setTextColor(activity.getColor(R.color.fg_less_significant));
                     } else {
                         viewBalanceLocal.setVisibility(View.INVISIBLE);
                     }
@@ -221,7 +217,7 @@ public final class WalletBalanceFragment extends Fragment {
             if (balance != null && balance.isGreaterThan(Constants.TOO_MUCH_BALANCE_THRESHOLD)) {
                 viewBalanceWarning.setVisibility(View.VISIBLE);
                 viewBalanceWarning.setText(R.string.wallet_balance_fragment_too_much);
-            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Build.VERSION.SECURITY_PATCH.compareToIgnoreCase(Constants.SECURITY_PATCH_INSECURE_BELOW) < 0) {
+            } else if (Build.VERSION.SECURITY_PATCH.compareToIgnoreCase(Constants.SECURITY_PATCH_INSECURE_BELOW) < 0) {
                 viewBalanceWarning.setVisibility(View.VISIBLE);
                 viewBalanceWarning.setText(R.string.wallet_balance_fragment_insecure_device);
             } else {

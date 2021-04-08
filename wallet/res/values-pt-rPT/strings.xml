@@ -17,7 +17,6 @@
   <string name="wallet_balance_fragment_too_much">Este montante é bastante elevado para transportar no seu bolso. Por favor mova algum para um sítio mais seguro.</string>
   <string name="wallet_balance_fragment_replaying">O saldo está indisponível durante o replay.</string>
   <string name="exchange_rates_activity_title">Taxas de câmbio</string>
-  <string name="exchange_rates_fragment_empty_text">Não foi possível carregar as taxas de câmbio.</string>
   <string name="exchange_rates_fragment_empty_search">Não foi possível encontrar as taxas de câmbio.</string>
   <string name="exchange_rates_fragment_default">(padrão)</string>
   <string name="exchange_rates_fragment_rate">taxa</string>
@@ -152,10 +151,6 @@
   <string name="address_book_context_edit_title">Editar endereço</string>
   <string name="address_book_context_remove_title">Remover endereço</string>
   <string name="address_book_context_copy_to_clipboard_title">Copiar para a área de transferência</string>
-  <string name="address_book_options_paste_from_clipboard_title">Colar da área de transferência</string>
-  <string name="address_book_options_paste_from_clipboard_empty">A área de transferência está vazia</string>
-  <string name="address_book_options_paste_from_clipboard_invalid">Os dados da área de transferência são irreconhecíveis</string>
-  <string name="address_book_options_paste_from_clipboard_own_address">O endereço na área de transferência é o seu.</string>
   <string name="address_book_options_scan_title">Digitalizar endereço</string>
   <string name="address_book_options_scan_invalid">Os dados digitalizados são irreconhecíveis</string>
   <string name="address_book_options_scan_own_address">O endereço digitalizado é o seu.</string>
@@ -283,7 +278,6 @@
   <string name="report_issue_dialog_description">descrição do problema</string>
   <string name="report_issue_dialog_report">Comunicar</string>
   <string name="report_issue_dialog_collect_device_info">Acrescentar informação do dispositivo</string>
-  <string name="report_issue_dialog_collect_installed_packages">Acrescentar a lista de pacotes instalados</string>
   <string name="report_issue_dialog_collect_application_log">Acrescentar o registo da aplicação</string>
   <string name="report_issue_dialog_collect_wallet_dump">Acrescentar a informação da carteira</string>
   <string name="report_issue_dialog_mail_intent_chooser">Enviar o relatório utilizando…</string>
@@ -336,7 +330,6 @@
   <string name="button_send_coins">Enviar moedas</string>
   <string name="button_scan">Digitalizar</string>
   <string name="button_settings">Configurações</string>
-  <string name="button_options">Mais opções</string>
   <string name="action_show_qr">Mostar código QR</string>
   <string name="action_browse">Explorar</string>
   <!--generic strings-->

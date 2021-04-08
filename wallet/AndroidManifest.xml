@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="de.schildbach.wallet"
     android:installLocation="internalOnly"
-    android:versionCode="451"
-    android:versionName="7.51">
+    android:versionCode="811"
+    android:versionName="8.11">
 
     <uses-sdk
-        android:minSdkVersion="21"
+        android:minSdkVersion="23"
         android:targetSdkVersion="29"
         tools:ignore="OldTargetApi" />
 
@@ -199,11 +199,6 @@
 
         <activity android:name="de.schildbach.wallet.ui.inheritance.owner.NewOwnerTx" />
 
-
-        <provider
-            android:name="de.schildbach.wallet.data.ExchangeRatesProvider"
-            android:authorities="${applicationId}.exchange_rates"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

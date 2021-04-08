@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
+package de.schildbach.wallet.addressbook;
 
 import android.content.Context;
 import androidx.room.Database;
@@ -27,20 +27,21 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 /**
  * @author Andreas Schildbach
  */
-@Database(entities = { AddressBookEntry.class, InheritanceEntity.class, TxEntity.class }, version = 3, exportSchema = false)
-public abstract class AppDatabase extends RoomDatabase {
+@Database(entities = { AddressBookEntry.class, InheritanceEntity.class }, version = 2, exportSchema = false)
+public abstract class AddressBookDatabase extends RoomDatabase {
     public abstract AddressBookDao addressBookDao();
     public abstract InheritanceDao inheritanceDao();
     public abstract InheritanceTxDao txDao();
 
-    private static AppDatabase INSTANCE;
+    private static final String DATABASE_NAME = "address_book";
+    private static AddressBookDatabase INSTANCE;
 
-    public static AppDatabase getDatabase(final Context context) {
+    public static AddressBookDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
-            synchronized (AppDatabase.class) {
+            synchronized (AddressBookDatabase.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), AppDatabase.class, "address_book")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3).allowMainThreadQueries().build();
+                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(), AddressBookDatabase.class, DATABASE_NAME)
+                            .addMigrations(MIGRATION_1_2).allowMainThreadQueries().build();
                 }
             }
         }

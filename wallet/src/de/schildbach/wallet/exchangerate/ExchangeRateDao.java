@@ -15,10 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
-
-import java.util.List;
-import java.util.Set;
+package de.schildbach.wallet.exchangerate;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -26,26 +23,23 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.util.List;
+
 /**
  * @author Andreas Schildbach
  */
 @Dao
-public interface AddressBookDao {
+public interface ExchangeRateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertOrUpdate(AddressBookEntry addressBookEntry);
+    void insertOrUpdate(ExchangeRateEntry exchangeRateEntry);
 
-    @Query("DELETE FROM address_book WHERE address = :address")
-    void delete(String address);
+    @Query("SELECT * FROM exchange_rates ORDER BY currency_code COLLATE LOCALIZED ASC")
+    LiveData<List<ExchangeRateEntry>> findAll();
 
-    @Query("SELECT label FROM address_book WHERE address = :address")
-    String resolveLabel(String address);
+    @Query("SELECT * FROM exchange_rates WHERE currency_code LIKE '%' || :constraint || '%' ORDER BY currency_code " +
+            "COLLATE LOCALIZED ASC")
+    LiveData<List<ExchangeRateEntry>> findByConstraint(String constraint);
 
-    @Query("SELECT * FROM address_book WHERE address LIKE '%' || :constraint || '%' OR label LIKE '%' || :constraint || '%' ORDER BY label COLLATE LOCALIZED ASC")
-    List<AddressBookEntry> get(String constraint);
-
-    @Query("SELECT * FROM address_book ORDER BY label COLLATE LOCALIZED ASC")
-    LiveData<List<AddressBookEntry>> getAll();
-
-    @Query("SELECT * FROM address_book WHERE address NOT IN (:except) ORDER BY label COLLATE LOCALIZED ASC")
-    LiveData<List<AddressBookEntry>> getAllExcept(Set<String> except);
+    @Query("SELECT * FROM exchange_rates WHERE currency_code = :currencyCode")
+    ExchangeRateEntry findByCurrencyCode(String currencyCode);
 }

@@ -17,7 +17,6 @@
   <string name="wallet_balance_fragment_too_much">Ez az összeg igen magas ahhoz, hogy a zsebedben hordd. Kérlek helyezd át egy részét biztonságosabb helyre.</string>
   <string name="wallet_balance_fragment_replaying">A frissítés során az egyenleg nem elérhető.</string>
   <string name="exchange_rates_activity_title">Árfolyamok</string>
-  <string name="exchange_rates_fragment_empty_text">Az árfolyamok betöltése sikertelen</string>
   <string name="exchange_rates_fragment_empty_search">Árfolyam nem található.</string>
   <string name="exchange_rates_fragment_default">(alapértelmezett)</string>
   <string name="exchange_rates_fragment_rate">árfolyam</string>
@@ -148,10 +147,6 @@
   <string name="address_book_context_edit_title">Cím szerkesztése</string>
   <string name="address_book_context_remove_title">Cím eltávolítása</string>
   <string name="address_book_context_copy_to_clipboard_title">Másolás</string>
-  <string name="address_book_options_paste_from_clipboard_title">Beillesztés</string>
-  <string name="address_book_options_paste_from_clipboard_empty">A vágólap üres</string>
-  <string name="address_book_options_paste_from_clipboard_invalid">Az adat a vágólapról nem felismerhető</string>
-  <string name="address_book_options_paste_from_clipboard_own_address">A vágólapon lévő cím a tied.</string>
   <string name="address_book_options_scan_title">Cím beolvasása</string>
   <string name="address_book_options_scan_invalid">A beolvasott adat felismerhetetlen</string>
   <string name="address_book_options_scan_own_address">A beolvasott cím a tiéd.</string>
@@ -274,7 +269,6 @@
   <string name="report_issue_dialog_description">hibaleírás</string>
   <string name="report_issue_dialog_report">Jelentés</string>
   <string name="report_issue_dialog_collect_device_info">Készülékinformáció csatolása</string>
-  <string name="report_issue_dialog_collect_installed_packages">A telepített csomagok listájának csatolása</string>
   <string name="report_issue_dialog_collect_application_log">Alkalmazás napló csatolása</string>
   <string name="report_issue_dialog_collect_wallet_dump">Tárca információk csatolása</string>
   <string name="report_issue_dialog_mail_intent_chooser">Hiba küldése ezzel…</string>
@@ -325,7 +319,6 @@
   <string name="button_send_coins">Érmék küldése</string>
   <string name="button_scan">Beolvasás</string>
   <string name="button_settings">Beállítások</string>
-  <string name="button_options">További lehetőségek</string>
   <string name="action_show_qr">QR-kód megtekintése</string>
   <string name="action_browse">Böngészés</string>
   <!--generic strings-->

@@ -18,12 +18,11 @@
 package de.schildbach.wallet.exchangerate;
 
 import com.squareup.moshi.Moshi;
-import de.schildbach.wallet.data.ExchangeRate;
 import okio.BufferedSource;
 import okio.Okio;
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,7 +35,7 @@ public class CoinGeckoTest {
     @Test
     public void parse() throws Exception {
         final BufferedSource json = Okio.buffer(Okio.source(getClass().getResourceAsStream("coingecko.json")));
-        final Map<String, ExchangeRate> rates = coinGecko.parse(json);
+        final List<ExchangeRateEntry> rates = coinGecko.parse(json);
         assertEquals(45, rates.size());
     }
 }
