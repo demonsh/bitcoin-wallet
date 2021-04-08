@@ -8,12 +8,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.bitcoinj.wallet.Wallet;
+
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.data.AppDatabase;
 import de.schildbach.wallet.data.InheritanceTxDao;
 import de.schildbach.wallet.data.TxEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
 import de.schildbach.wallet.ui.inheritance.InheritanceHeirActivity;
+import de.schildbach.wallet.util.Inheritance;
 
 public class NewHairTx extends AbstractWalletActivity {
 
@@ -21,6 +24,7 @@ public class NewHairTx extends AbstractWalletActivity {
 
     private EditText ownerAddressView;
     private EditText txView;
+    private EditText blocksView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +34,7 @@ public class NewHairTx extends AbstractWalletActivity {
         this.txDao = AppDatabase.getDatabase(this.getBaseContext()).txDao();
 
         ownerAddressView = findViewById(R.id.ownerAddress);
-        txView = findViewById(R.id.tx);
+        blocksView = findViewById(R.id.blocks);
 
     }
 
@@ -39,8 +43,13 @@ public class NewHairTx extends AbstractWalletActivity {
         String tx = txView.getText().toString();
         String label = ((EditText)findViewById(R.id.label)).getText().toString();
 
-        TxEntity txEntity = new TxEntity(tx,ownerAddress, label);
+        String blocks = blocksView.getText().toString();
+
+        TxEntity txEntity = new TxEntity(tx,ownerAddress, label, blocks);
         txDao.insertOrUpdate(txEntity);
+
+        Wallet wallet = getWalletApplication().getWallet();
+        wallet.addWatchedAddress()
 
         Toast.makeText(this, "Transaction added", Toast.LENGTH_LONG);
     }

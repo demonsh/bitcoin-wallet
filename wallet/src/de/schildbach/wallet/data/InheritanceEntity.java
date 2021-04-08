@@ -22,9 +22,15 @@ public class InheritanceEntity {
     @ColumnInfo(name = "ownerAddress")
     private String ownerAddress;
 
-    public InheritanceEntity(@NonNull String address, String label) {
+    @ColumnInfo(name = "blocks")
+    private String blocks;
+
+
+
+    public InheritanceEntity(@NonNull String address, String label, String blocks) {
         this.address = address;
         this.label = label;
+        this.blocks = blocks;
     }
 
     public String getAddress() {
@@ -49,5 +55,9 @@ public class InheritanceEntity {
 
     public void setOwnerAddress(String ownerAddress) {
         this.ownerAddress = ownerAddress;
+    }
+
+    public String getBlocks() {
+        return blocks;
     }
 }

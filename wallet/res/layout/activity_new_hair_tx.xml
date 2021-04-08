@@ -40,6 +40,21 @@
         android:id="@+id/ownerAddress"
         android:hint="Owner address"/>
 
+<!-- Blocks -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:labelFor="@id/blocks"
+        android:text="Owner address"
+        android:textSize="@dimen/font_size_normal"
+        android:textStyle="bold" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/blocks"
+        android:hint="Blocks"/>
 
 <!--    Tx-->
     <TextView

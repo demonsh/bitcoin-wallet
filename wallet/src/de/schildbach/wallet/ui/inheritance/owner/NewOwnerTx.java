@@ -47,7 +47,16 @@ public class NewOwnerTx extends AbstractWalletActivity {
             return;
         }
 
-        InheritanceEntity in = new InheritanceEntity(address, name);
+        final EditText blocksEditText = findViewById(R.id.blocks);
+        String blocks = blocksEditText.getText().toString();
+
+        if("".equalsIgnoreCase(blocks)){
+            labelField.setHint("please enter number of blocks");
+            labelField.setError("please enter number of blocks");
+            return;
+        }
+
+        InheritanceEntity in = new InheritanceEntity(address, name, blocks);
         inheritanceDao.insertOrUpdate(in);
     }
 

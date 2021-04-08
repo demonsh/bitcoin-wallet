@@ -40,4 +40,10 @@
         android:id="@+id/heirAddress"
         android:hint="Heir address"/>
 
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="43dp"
+        android:id="@+id/blocks"
+        android:hint="Heir address"/>
+
 </LinearLayout>

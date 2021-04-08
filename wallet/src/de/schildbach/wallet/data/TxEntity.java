@@ -21,10 +21,14 @@ public class TxEntity implements Serializable {
     @ColumnInfo(name = "label")
     private String label;
 
-    public TxEntity(@NonNull String tx, String ownerAddress, String label) {
+    @ColumnInfo(name = "blocks")
+    private String blocks;
+
+    public TxEntity(@NonNull String tx, String ownerAddress, String label, String blocks) {
         this.tx = tx;
         this.ownerAddress = ownerAddress;
         this.label = label;
+        this.blocks = blocks;
     }
 
     public String getTx() {
@@ -37,5 +41,9 @@ public class TxEntity implements Serializable {
 
     public String getOwnerAddress() {
         return ownerAddress;
+    }
+
+    public String getBlocks() {
+        return blocks;
     }
 }
