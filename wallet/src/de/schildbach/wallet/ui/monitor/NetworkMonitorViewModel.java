@@ -15,24 +15,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.ui;
+package de.schildbach.wallet.ui.monitor;
 
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.WalletLiveData;
-
-import android.app.Application;
-import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 
 /**
  * @author Andreas Schildbach
  */
-public class ReportIssueViewModel extends AndroidViewModel {
-    private final WalletApplication application;
-    public final WalletLiveData wallet;
-
-    public ReportIssueViewModel(final Application application) {
-        super(application);
-        this.application = (WalletApplication) application;
-        this.wallet = new WalletLiveData(this.application);
-    }
+public class NetworkMonitorViewModel extends ViewModel {
+    public final MutableLiveData<Object> selectedItem = new MutableLiveData<>();
 }

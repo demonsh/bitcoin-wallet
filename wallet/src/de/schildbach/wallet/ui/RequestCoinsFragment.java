@@ -17,23 +17,6 @@
 
 package de.schildbach.wallet.ui;
 
-import org.bitcoinj.core.Address;
-import org.bitcoinj.protocols.payments.PaymentProtocol;
-import org.bitcoinj.script.Script;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.schildbach.wallet.Configuration;
-import de.schildbach.wallet.Constants;
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.ExchangeRate;
-import de.schildbach.wallet.offline.AcceptBluetoothService;
-import de.schildbach.wallet.ui.send.SendCoinsActivity;
-import de.schildbach.wallet.util.Bluetooth;
-import de.schildbach.wallet.util.Nfc;
-import de.schildbach.wallet.util.Toast;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ActivityNotFoundException;
@@ -57,11 +40,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
@@ -69,7 +49,22 @@ import androidx.cardview.widget.CardView;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
+import de.schildbach.wallet.Configuration;
+import de.schildbach.wallet.Constants;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.WalletApplication;
+import de.schildbach.wallet.offline.AcceptBluetoothService;
+import de.schildbach.wallet.ui.send.SendCoinsActivity;
+import de.schildbach.wallet.util.Bluetooth;
+import de.schildbach.wallet.util.Nfc;
+import de.schildbach.wallet.util.Toast;
+import org.bitcoinj.core.Address;
+import org.bitcoinj.protocols.payments.PaymentProtocol;
+import org.bitcoinj.script.Script;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
@@ -78,6 +73,7 @@ public final class RequestCoinsFragment extends Fragment {
     private AbstractWalletActivity activity;
     private WalletApplication application;
     private Configuration config;
+    private FragmentManager fragmentManager;
     private ClipboardManager clipboardManager;
     @Nullable
     private BluetoothAdapter bluetoothAdapter;
@@ -111,6 +107,8 @@ public final class RequestCoinsFragment extends Fragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.fragmentManager = getChildFragmentManager();
+
         setHasOptionsMenu(true);
 
         viewModel = new ViewModelProvider(this).get(RequestCoinsViewModel.class);
@@ -137,12 +135,14 @@ public final class RequestCoinsFragment extends Fragment {
         });
         viewModel.bitcoinUri.observe(this, bitcoinUri -> activity.invalidateOptionsMenu());
         if (Constants.ENABLE_EXCHANGE_RATES) {
-            viewModel.exchangeRate.observe(this, exchangeRate -> amountCalculatorLink.setExchangeRate(exchangeRate.rate));
+            viewModel.exchangeRate.observe(this,
+                    exchangeRate -> amountCalculatorLink.setExchangeRate(exchangeRate != null ?
+                            exchangeRate.exchangeRate() : null));
         }
         viewModel.showBitmapDialog.observe(this, new Event.Observer<Bitmap>() {
             @Override
-            public void onEvent(final Bitmap bitmap) {
-                BitmapFragment.show(getParentFragmentManager(), bitmap);
+            protected void onEvent(final Bitmap bitmap) {
+                BitmapFragment.show(fragmentManager, bitmap);
             }
         });
 

@@ -17,24 +17,21 @@
 
 package de.schildbach.wallet.ui.preference;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.schildbach.wallet.R;
-import de.schildbach.wallet.ui.DialogBuilder;
-import de.schildbach.wallet.util.Qr;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
-import android.content.DialogInterface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.core.app.ShareCompat;
+import de.schildbach.wallet.R;
+import de.schildbach.wallet.ui.DialogBuilder;
+import de.schildbach.wallet.util.Qr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andreas Schildbach
@@ -80,8 +77,7 @@ public class ExtendedPublicKeyFragment extends DialogFragment {
         final ImageView imageView = view.findViewById(R.id.extended_public_key_dialog_image);
         imageView.setImageDrawable(bitmap);
 
-        final DialogBuilder dialog = new DialogBuilder(activity);
-        dialog.setView(view);
+        final DialogBuilder dialog = DialogBuilder.custom(activity, 0, view);
         dialog.setNegativeButton(R.string.button_dismiss, (d, which) -> dismissAllowingStateLoss());
         dialog.setPositiveButton(R.string.button_share, (d, which) -> {
             final ShareCompat.IntentBuilder builder = ShareCompat.IntentBuilder.from(activity);

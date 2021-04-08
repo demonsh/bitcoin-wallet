@@ -15,22 +15,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package de.schildbach.wallet.data;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package de.schildbach.wallet.addressbook;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Andreas Schildbach
  */
-@Entity(tableName = "address_book")
+@Entity(tableName = AddressBookEntry.TABLE_NAME)
 public class AddressBookEntry {
+    public static final String TABLE_NAME = "address_book";
+
     @NonNull
     @PrimaryKey
     @ColumnInfo(name = "address")

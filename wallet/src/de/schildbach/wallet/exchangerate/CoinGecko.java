@@ -17,25 +17,29 @@
 
 package de.schildbach.wallet.exchangerate;
 
+import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-import de.schildbach.wallet.data.ExchangeRate;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okio.BufferedSource;
+import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * @author Andreas Schildbach
  */
 public final class CoinGecko {
     private static final HttpUrl URL = HttpUrl.parse("https://api.coingecko.com/api/v3/exchange_rates");
+    private static final MediaType MEDIA_TYPE = MediaType.get("application/json");
     private static final String SOURCE = "CoinGecko.com";
 
     private static final Logger log = LoggerFactory.getLogger(CoinGecko.class);
@@ -46,22 +50,26 @@ public final class CoinGecko {
         this.moshi = moshi;
     }
 
+    public MediaType mediaType() {
+        return MEDIA_TYPE;
+    }
+
     public HttpUrl url() {
         return URL;
     }
 
-    public Map<String, ExchangeRate> parse(final BufferedSource jsonSource) throws IOException {
+    public List<ExchangeRateEntry> parse(final BufferedSource jsonSource) throws IOException {
         final JsonAdapter<Response> jsonAdapter = moshi.adapter(Response.class);
         final Response jsonResponse = jsonAdapter.fromJson(jsonSource);
-        final Map<String, ExchangeRate> result = new TreeMap<>();
+        final List<ExchangeRateEntry> result = new ArrayList<>(jsonResponse.rates.size());
         for (Map.Entry<String, ExchangeRateJson> entry : jsonResponse.rates.entrySet()) {
             final String symbol = entry.getKey().toUpperCase(Locale.US);
             final ExchangeRateJson exchangeRate = entry.getValue();
-            if (exchangeRate.type == Type.fiat) {
+            if (exchangeRate.type == Type.FIAT) {
                 try {
                     final Fiat rate = Fiat.parseFiatInexact(symbol, exchangeRate.value);
                     if (rate.signum() > 0)
-                        result.put(symbol, new ExchangeRate(new org.bitcoinj.utils.ExchangeRate(rate), SOURCE));
+                        result.add(new ExchangeRateEntry(SOURCE, new ExchangeRate(rate)));
                 } catch (final ArithmeticException x) {
                     log.warn("problem parsing {} exchange rate from {}: {}", symbol, URL, x.getMessage());
                 }
@@ -70,7 +78,14 @@ public final class CoinGecko {
         return result;
     }
 
-    private enum Type { crypto, fiat, commodity }
+    private enum Type {
+        @Json(name = "crypto")
+        CRYPTO,
+        @Json(name = "fiat")
+        FIAT,
+        @Json(name = "commodity")
+        COMMODITY
+    }
 
     private static class Response {
         public Map<String, ExchangeRateJson> rates;

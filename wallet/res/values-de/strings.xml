@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <resources>
 
-    <string name="toast_wallet_reset">Wallet wurde zurückgesetzt,\nwird einige Zeit benötigen</string>
+    <string name="toast_wallet_reset">Deine Wallet wurde zurückgesetzt!\nDie Wiederherstellung wird einige Zeit benötigen.</string>
+    <string name="toast_start_external_document_failed">Es ist kein Web-Browser installiert um das externe Dokument zu öffnen.</string>
+    <string name="toast_start_storage_provider_selector_failed">Es ist kein passender Netzspeicher-Dienst installiert.\nDu brauchst so etwas wie \"Nextcloud\" oder \"Google Drive\".</string>
     <string name="wallet_disclaimer_fragment_remind_safety">Nutzung auf eigene Gefahr. Lies die &lt;u&gt;Sicherheitshinweise&lt;/u&gt;.</string>
     <string name="wallet_disclaimer_fragment_remind_backup">Bitte &lt;u&gt;sichere deine Wallet&lt;/u&gt;!</string>
     <string name="blockchain_state_progress_hours">%1$s, hinkt %2$d Stunden hinterher</string>
@@ -10,15 +12,14 @@
     <string name="blockchain_state_progress_months">%1$s, hinkt %2$d Monate hinterher</string>
     <string name="blockchain_state_progress_downloading">Synchronisiere mit Netzwerk</string>
     <string name="blockchain_state_progress_stalled">Synchronisation blockiert</string>
-    <string name="blockchain_state_progress_problem_storage">Synchronisation: Speicherplatz-Problem</string>
-    <string name="blockchain_state_progress_problem_network">Synchronisation: Netzwerk-Problem</string>
+    <string name="blockchain_state_progress_problem_storage">Problem mit Synchronisation: Geringer Speicherplatz</string>
+    <string name="blockchain_state_progress_problem_network">Problem mit Synchronisation: Keine Netzwerkverbindung</string>
     <string name="wallet_address_fragment_clipboard_msg">Bitcoin-Adresse ins Clipboard kopiert</string>
     <string name="wallet_address_dialog_fragment_hint">Um deine Privatsphäre zu schützen, ändert sich deine Adresse sobald sie eine Zahlung empfängt.</string>
     <string name="wallet_balance_fragment_insecure_device">Dein Gerät ist alt und unsicher. Bitte nutze es nur für kleine Beträge.</string>
     <string name="wallet_balance_fragment_too_much">Dieser Wert ist recht hoch, um in der Tasche getragen zu werden. Bitte verschiebe etwas an einen sichereren Ort.</string>
     <string name="wallet_balance_fragment_replaying">Guthaben ist während des Replays nicht verfügbar.</string>
     <string name="exchange_rates_activity_title">Wechselkurse</string>
-    <string name="exchange_rates_fragment_empty_text">Kann Wechselkurse nicht laden.</string>
     <string name="exchange_rates_fragment_empty_search">Kann Wechselkurs nicht finden.</string>
     <string name="exchange_rates_fragment_default">(Standard)</string>
     <string name="exchange_rates_fragment_rate">Kurs</string>
@@ -155,13 +156,10 @@
     <string name="address_book_context_edit_title">Adresse ändern</string>
     <string name="address_book_context_remove_title">Adresse entfernen</string>
     <string name="address_book_context_copy_to_clipboard_title">Ins Clipboard kopieren</string>
-    <string name="address_book_options_paste_from_clipboard_title">Aus dem Clipboard einfügen</string>
-    <string name="address_book_options_paste_from_clipboard_empty">Clipboard ist leer</string>
-    <string name="address_book_options_paste_from_clipboard_invalid">Die Daten auf dem Clipboard sind nicht entzifferbar</string>
-    <string name="address_book_options_paste_from_clipboard_own_address">Die Adresse auf dem Clipboard ist eine deiner eigenen.</string>
     <string name="address_book_options_scan_title">Adresse scannen</string>
     <string name="address_book_options_scan_invalid">Gescannte Daten sind nicht entzifferbar</string>
     <string name="address_book_options_scan_own_address">Die gescannte Adresse ist eine deiner eigenen.</string>
+    <string name="address_book_row_current_address">Dies ist deine aktuelle Empfangsadresse.</string>
     <string name="address_book_row_message_compromised_key">Diese Adresse ist vielleicht kompromittiert. Du solltest sie nicht mehr zum Empfang von Bitcoins nutzen.</string>
     <string name="edit_address_book_entry_dialog_title_add">Sendeadresse hinzufügen</string>
     <string name="edit_address_book_entry_dialog_title_edit">Name von Sendeadresse ändern</string>
@@ -256,9 +254,14 @@
     <string name="preferences_own_name_dialog_message">Bitte halte ihn kurz.</string>
     <string name="preferences_send_coins_autoclose_title">Senden-Dialog automatisch schließen</string>
     <string name="preferences_send_coins_autoclose_summary">Wenn die Zahlung gesendet ist, wird der Senden-Dialog automatisch geschlossen.</string>
+    <string name="preferences_sync_mode_title">Datenverbrauch vs. Privatsphäre</string>
+    <string name="preferences_sync_mode_summary">Wähle bei der Netzwerk-Synchronisation zwischen geringem Datenverbrauch und verbesserter Privatsphäre.</string>
+    <string name="preferences_sync_mode_labels_connection_filter"><![CDATA[<b>Geringer Datenverbrauch:</b> Nutzt einen Netzwerk-Filter um nur Transaktionen zu übertragen, die relevant für deine Wallet sind. Das benötigt etwa 500 MB pro Monat, teilt den Filter aber dem Netzwerk mit.]]></string>
+    <string name="preferences_sync_mode_labels_full"><![CDATA[<b>Verbesserte Privatsphäre:</b> Legt keine Informationen über deine Wallet offen. Beachte daß weil alle Transaktionen übertragen werden, benötigt dies üppige 10 GB pro Monat. Bevor du dies nutzt, kläre bitte ob sich dein Tarif eignet.]]></string>
     <string name="preferences_trusted_peer_title">Vertrauenswürdiger Peer</string>
     <string name="preferences_trusted_peer_summary">IP oder Hostname eines einzelnen Peers, der verbunden wird.</string>
     <string name="preferences_trusted_peer_dialog_message">Bitte gib eine gültige IP-Adresse oder einen Hostnamen ein. Wenn du Tor eingerichtet hast, kannst du hier auch eine Onion-Adresse verwenden.</string>
+    <string name="preferences_trusted_peer_dialog_message_multiple">Du kannst mehrere vertrauenswürdige Peers angeben, indem du sie mit einem Leerzeichen trennst.</string>
     <string name="preferences_trusted_peer_resolve_progress">Namensauflösung läuft…</string>
     <string name="preferences_trusted_peer_resolve_unknown_host">Unbekannter Hostname!</string>
     <string name="preferences_trusted_peer_only_title">Reguläre Peers übergehen</string>
@@ -294,7 +297,6 @@
     <string name="report_issue_dialog_description">Problembeschreibung</string>
     <string name="report_issue_dialog_report">Senden</string>
     <string name="report_issue_dialog_collect_device_info">Geräte-Informationen anhängen</string>
-    <string name="report_issue_dialog_collect_installed_packages">Liste von installierten Paketen anhängen</string>
     <string name="report_issue_dialog_collect_application_log">Applikations-Logfile anhängen</string>
     <string name="report_issue_dialog_collect_wallet_dump">Dump der Wallet anhängen</string>
     <string name="report_issue_dialog_mail_intent_chooser">Bericht senden mit…</string>
@@ -352,7 +354,6 @@
     <string name="button_send_coins">Senden</string>
     <string name="button_scan">Scannen</string>
     <string name="button_settings">Einstellungen</string>
-    <string name="button_options">Weitere Optionen</string>
     <string name="action_show_qr">QR-Code zeigen</string>
     <string name="action_browse">Im Browser öffnen</string>
 

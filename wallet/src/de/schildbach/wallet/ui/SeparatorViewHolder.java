@@ -17,28 +17,18 @@
 
 package de.schildbach.wallet.ui;
 
-import de.schildbach.wallet.R;
-
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
-import androidx.fragment.app.ListFragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * @author Andreas Schildbach
  */
-public class FancyListFragment extends ListFragment {
-    @Override
-    public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
-            final Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fancy_list_content, container, false);
-    }
+public class SeparatorViewHolder extends RecyclerView.ViewHolder {
+    public final TextView label;
 
-    @Override
-    public void setEmptyText(final CharSequence text) {
-        final TextView emptyView = getView().findViewById(android.R.id.empty);
-        emptyView.setText(text);
+    public SeparatorViewHolder(final View itemView) {
+        super(itemView);
+        label = itemView.findViewById(android.R.id.text1);
     }
 }

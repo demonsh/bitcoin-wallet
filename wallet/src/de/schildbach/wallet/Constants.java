@@ -17,9 +17,12 @@
 
 package de.schildbach.wallet;
 
-import java.io.File;
-import java.util.concurrent.TimeUnit;
-
+import android.os.Build;
+import android.text.format.DateUtils;
+import com.google.common.io.BaseEncoding;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.NetworkParameters;
@@ -30,14 +33,7 @@ import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.BaseEncoding;
-
-import android.os.Build;
-import android.os.Environment;
-import android.text.format.DateUtils;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Andreas Schildbach
@@ -63,7 +59,7 @@ public final class Constants {
      */
     public static final Script.ScriptType UPGRADE_OUTPUT_SCRIPT_TYPE = Script.ScriptType.P2WPKH;
 
-    /** Enable switch for synching of the blockchain */
+    /** Enable switch for synching of the block chain */
     public static final boolean ENABLE_BLOCKCHAIN_SYNC = true;
     /** Enable switch for fetching and showing of exchange rates */
     public static final boolean ENABLE_EXCHANGE_RATES = true;
@@ -133,7 +129,7 @@ public final class Constants {
 
     /** Donation address for tip/donate action. */
     public static final String DONATION_ADDRESS = NETWORK_PARAMETERS.getId().equals(NetworkParameters.ID_MAINNET)
-            ? "bc1q2ge5fmujrxaxhgs85fkmxnhk3mxfdyr87fal4q" : null;
+            ? "bc1q8ruc8hanp7hrzfs48dvtuzz4ukmpe7cgsvvzrt" : null;
 
     /** Recipient e-mail address for reports. */
     public static final String REPORT_EMAIL = "bitcoin.wallet.developers@gmail.com";
@@ -149,6 +145,7 @@ public final class Constants {
     public static final char CHAR_BITCOIN = '\u20bf';
     public static final char CHAR_ALMOST_EQUAL_TO = '\u2248';
     public static final char CHAR_CHECKMARK = '\u2713';
+    public static final char CHAR_CROSSMARK = '\u2715';
     public static final char CURRENCY_PLUS_SIGN = '\uff0b';
     public static final char CURRENCY_MINUS_SIGN = '\uff0d';
     public static final String PREFIX_ALMOST_EQUAL_TO = Character.toString(CHAR_ALMOST_EQUAL_TO) + CHAR_THIN_SPACE;
@@ -172,12 +169,14 @@ public final class Constants {
 
     public static final long DELAYED_TRANSACTION_THRESHOLD_MS = 2 * DateUtils.HOUR_IN_MILLIS;
 
-    /** A balance above this amount will show a warning */
-    public static final Coin TOO_MUCH_BALANCE_THRESHOLD = Coin.COIN.divide(8);
-    /** A balance above this amount will cause the donate option to be shown */
-    public static final Coin SOME_BALANCE_THRESHOLD = Coin.COIN.divide(400);
+    public static final long AUTOCLOSE_DELAY_MS = 1000;
 
-    public static final int SDK_DEPRECATED_BELOW = Build.VERSION_CODES.LOLLIPOP;
+    /** A balance above this amount will show a warning */
+    public static final Coin TOO_MUCH_BALANCE_THRESHOLD = Coin.COIN.divide(32);
+    /** A balance above this amount will cause the donate option to be shown */
+    public static final Coin SOME_BALANCE_THRESHOLD = Coin.COIN.divide(1600);
+
+    public static final int SDK_DEPRECATED_BELOW = Build.VERSION_CODES.M;
     public static final String SECURITY_PATCH_INSECURE_BELOW = "2018-01-01";
 
     public static final int NOTIFICATION_ID_CONNECTIVITY = 1;
