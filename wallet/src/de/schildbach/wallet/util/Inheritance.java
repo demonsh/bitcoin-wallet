@@ -47,14 +47,13 @@ import static org.bitcoinj.script.ScriptOpCodes.OP_ENDIF;
 import static org.bitcoinj.script.ScriptOpCodes.OP_IF;
 
 public class Inheritance {
-    //TODO int blocks should be in internal class state
 
     public static Transaction getWithdrawTxFromInterimAddress(
             ECKey ownerKey,
             ECKey heirKey,
             int blocks,
             Wallet wallet,
-            Transaction txToInterimAddress
+            Transaction txToInterimAddress // TODO Check if the tx to interim address can be used instead of watching the interim address to get its info afterwards
     ) throws Exception {
         Address ownerAddress = Address.fromKey(wallet.getParams(), ownerKey, Script.ScriptType.P2WPKH);
         Address heirAddress = Address.fromKey(wallet.getParams(), heirKey, Script.ScriptType.P2WPKH);
