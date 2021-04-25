@@ -16,13 +16,21 @@ public class InheritanceEntity {
     @ColumnInfo(name = "label")
     private String label;
 
-    public InheritanceEntity(@NonNull String address, String label) {
+    @ColumnInfo(name = "pubKey")
+    private String pubKey;
+
+    public InheritanceEntity(@NonNull String address, String label, String pubKey) {
         this.address = address;
         this.label = label;
+        this.pubKey = pubKey;
     }
 
     public String getAddress() {
         return address;
+    }
+
+    public String getPubKey() {
+        return pubKey;
     }
 
     public String getLabel() {

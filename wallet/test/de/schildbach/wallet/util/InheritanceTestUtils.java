@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class InheritanceTestUtils {
-    public static void runShellCommand(String command) {
-        runShellCommand(command, true);
+    public static String runShellCommand(String command) {
+        return runShellCommand(command, false);
     }
 
-    public static void runShellCommand(String command, boolean logOutput) {
+    public static String runShellCommand(String command, boolean logOutput) {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("bash", "-c", command);
+        StringBuilder outputString = new StringBuilder();
 
         try {
             Process process = processBuilder.start();
@@ -23,19 +24,25 @@ public class InheritanceTestUtils {
                     new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
             String line;
-            if (logOutput) {
-                while ((line = output.readLine()) != null) {
-                    System.out.println(line);
-                }
+            while ((line = output.readLine()) != null) {
+                outputString.append(line + "\n");
             }
+
+            if (logOutput) {
+                System.out.println(outputString.toString());
+            }
+
             while ((line = erroutput.readLine()) != null) {
                 System.out.println(line);
+                outputString.append(line);
             }
 
             int exitCode = process.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
+            System.out.println("Command " + command + "exited with error code : " + exitCode + "\n");
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            return outputString.toString();
         }
     }
 

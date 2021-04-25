@@ -23,7 +23,6 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
-import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
@@ -32,100 +31,73 @@ import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.script.ScriptError;
-import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.bitcoinj.script.ScriptOpCodes.OP_1;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSEQUENCEVERIFY;
 import static org.bitcoinj.script.ScriptOpCodes.OP_CHECKSIG;
 import static org.bitcoinj.script.ScriptOpCodes.OP_DROP;
-import static org.bitcoinj.script.ScriptOpCodes.OP_DUP;
 import static org.bitcoinj.script.ScriptOpCodes.OP_ELSE;
 import static org.bitcoinj.script.ScriptOpCodes.OP_ENDIF;
-import static org.bitcoinj.script.ScriptOpCodes.OP_EQUAL;
-import static org.bitcoinj.script.ScriptOpCodes.OP_EQUALVERIFY;
-import static org.bitcoinj.script.ScriptOpCodes.OP_HASH160;
 import static org.bitcoinj.script.ScriptOpCodes.OP_IF;
 
 public class Inheritance {
     //TODO int blocks should be in internal class state
 
     public static Transaction getWithdrawTxFromInterimAddress(
-            Address ownerAddress,
-            Address heirAddress,
+            ECKey ownerKey,
+            ECKey heirKey,
             int blocks,
-            Wallet wallet
+            Wallet wallet,
+            Transaction txToInterimAddress
     ) throws Exception {
+        Address ownerAddress = Address.fromKey(wallet.getParams(), ownerKey, Script.ScriptType.P2WPKH);
+        Address heirAddress = Address.fromKey(wallet.getParams(), heirKey, Script.ScriptType.P2WPKH);
         Address addressToWidthrawTo = getAddressToWithdrawTo(ownerAddress, heirAddress, wallet);
-        InterimAddressInfo interimAddressInfo = getInterimAddressInfo(ownerAddress, heirAddress, blocks, wallet);
-
-        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        Script redeemScript = inheritanceScriptWithCSV(ownerKey, heirKey, blocks);
 
         Transaction tx = new Transaction(wallet.getNetworkParameters());
         tx.setVersion(2);
 
+        InterimAddressInfo interimAddressInfo = getInterimAddressInfo(ownerKey, heirKey, blocks, wallet);
         List<TransactionInput> inputs = getAllInputsToWithdrawFromInterimAddress(
-                interimAddressInfo.unspendTransactionOutputs,
-                wallet.getParams(),
-                redeemScript,
-                blocks
+            interimAddressInfo.unspendTransactionOutputs,
+            wallet.getParams(),
+            redeemScript
         );
 
         tx.addOutput(
-                getMaxBalanceToWithdrawExceptFee(tx, interimAddressInfo.balance, wallet),
-                addressToWidthrawTo
+            getMaxBalanceToWithdrawExceptFee(tx, interimAddressInfo.balance, wallet),
+            addressToWidthrawTo
         );
 
         for(int i = 0; i < inputs.size(); i++) {
-            tx.addInput(inputs.get(i));
-        }
-
-        Script p2wshScript = ScriptBuilder.createP2WSHOutputScript(redeemScript);
-        Script scriptCode = new ScriptBuilder().data(ScriptBuilder.createP2WSHOutputScript(redeemScript).getProgram()).build();
-
-        for(int i = 0; i < inputs.size(); i++) {
-//            tx.addInput(inputs.get(i));
             TransactionWitness witness = new TransactionWitness(3);
-
-            Sha256Hash sigHash = tx.hashForWitnessSignature(
-                i,
-                p2wshScript,
-                inputs.get(i).getValue(), // we need
-                Transaction.SigHash.ALL,
-                false
-            );
-
-            ECKey.ECDSASignature sig = wallet.findKeyFromAddress(addressToWidthrawTo).sign(sigHash);
-            TransactionSignature txSig = new TransactionSignature(sig, Transaction.SigHash.ALL, false);
-
-//            witness.setPush(0, txSig.encodeToBitcoin());
-//            witness.setPush(1, wallet.findKeyFromAddress(addressToWidthrawTo).getPubKey());
-//            witness.setPush(0, new byte[]{});
-//            witness.setPush(0, new byte[]{(byte)0x01});
-//            witness.setPush(1, redeemScript.getProgram());
-//            tx.getInput(i).setSequenceNumber(blocks);
-
-
-//            witness.setPush(0, key );
-//            witness.setPush(1, redeemScript.getProgram());
-
-            byte[] preRedeemOpcode = addressToWidthrawTo == ownerAddress ? new byte[]{(byte)0x01} : new byte[]{};
-            witness.setPush(0, preRedeemOpcode);
-            witness.setPush(1, redeemScript.getProgram());
-
+            tx.addInput(inputs.get(i));
             if (addressToWidthrawTo == heirAddress) {
-                tx.getInput(i).setSequenceNumber(blocks);
+                tx.getInput(0).setSequenceNumber(blocks);
             }
 
-            tx.getInput(i).setWitness(witness);
+            TransactionSignature txSig = tx.calculateWitnessSignature(
+                    i,
+                    wallet.findKeyFromAddress(addressToWidthrawTo),
+                    redeemScript,
+                    inputs.get(i).getValue(),
+                    Transaction.SigHash.ALL,
+                    false
+            );
+
+            byte[] preRedeemOpcode = addressToWidthrawTo == ownerAddress ? new byte[]{(byte)0x01} : new byte[]{};
+            witness.setPush(0, txSig.encodeToBitcoin());
+            witness.setPush(1, preRedeemOpcode);
+            witness.setPush(2, redeemScript.getProgram());
+
+            tx.getInput(0).setWitness(witness);
         }
 
         return tx;
@@ -144,13 +116,13 @@ public class Inheritance {
     }
 
     public static InterimAddressInfo getInterimAddressInfo(
-            Address ownerAddress,
-            Address heirAddress,
+            ECKey ownerKey,
+            ECKey heirKey,
             int blocks,
             Wallet wallet
     ) {
         InterimAddressInfo interimAddressInfo = new InterimAddressInfo();
-        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, wallet);
+        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerKey, heirKey, blocks, wallet);
         //TODO make sure if there is a better way to get address balance than AddressBalance class from Internet
         AddressBalance addressBalance = new AddressBalance(interimAddress);
         interimAddressInfo.balance = wallet.getBalance(addressBalance);
@@ -164,24 +136,24 @@ public class Inheritance {
     }
 
     public static Address getInterimInheritanceAddressP2WSH(
-        Address ownerAddress,
-        Address heirAddress,
+        ECKey ownerKey,
+        ECKey heirKey,
         int blocks,
         Wallet wallet
     ) {
-        Script redeemScript = inheritanceScriptWithCSV(ownerAddress, heirAddress, blocks);
+        Script redeemScript = inheritanceScriptWithCSV(ownerKey, heirKey, blocks);
         Script script = ScriptBuilder.createP2WSHOutputScript(redeemScript);
         NetworkParameters params = wallet.getParams();
         return script.getToAddress(params);
     }
 
     public static Transaction signInheritanceTx(
-            Address ownerAddress,
-            Address heirAddress,
+            ECKey ownerKey,
+            ECKey heirKey,
             int blocks,
             Wallet wallet
     ) throws Exception {
-        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, wallet);
+        Address interimAddress = getInterimInheritanceAddressP2WSH(ownerKey, heirKey, blocks, wallet);
         //TODO inherit all available balance minus fee
         Coin allAvailableBalance = wallet.getBalance();
         Coin valueToInherit = allAvailableBalance.divide(10);
@@ -193,50 +165,30 @@ public class Inheritance {
         }
     }
 
-    public static Script inheritanceScriptWithCSV(Address ownerAddress, Address heirAddress, int blocks) {
-        String keyHex = "03B62AFBCBC625D4400830212147379B76C15458B68477103B006B7695853D8EDB";
-        byte[] key = new BigInteger(keyHex, 16).toByteArray();
-
+    public static Script inheritanceScriptWithCSV(ECKey ownerKey, ECKey heirKey, int blocks) {
         ScriptBuilder builder = new ScriptBuilder();
 
-//        builder.op(OP_IF);
-//        builder.op(OP_DUP);
-//        builder.op(OP_HASH160);
-//        builder.data(ownerAddress.getHash());
-//        builder.op(OP_EQUALVERIFY);
-//        builder.op(OP_CHECKSIG);
-//        builder.op(OP_ELSE);
-//        builder.data(encodeBip68Sequence(blocks)); //TODO keep in mind that number of bytes added here may be wrong
-//        builder.op(OP_CHECKSEQUENCEVERIFY);
-//        builder.op(OP_DROP);
-//        builder.op(OP_DUP);
-//        builder.op(OP_HASH160);
-//        builder.data(heirAddress.getHash());
-//        builder.op(OP_EQUALVERIFY);
-//        builder.op(OP_CHECKSIG);
-//        builder.op(OP_ENDIF);
-
         builder.op(OP_IF);
-        builder.op(OP_1);
-        builder.op(OP_1);
-        builder.op(OP_EQUAL);
+        builder.data(ownerKey.getPubKey());
         builder.op(OP_ELSE);
-        builder.data(encodeBip68Sequence(blocks)); //TODO keep in mind that number of bytes added here may be wrong
+        builder.data(ByteBuffer.allocate(4).putInt(blocks).array());
         builder.op(OP_CHECKSEQUENCEVERIFY);
         builder.op(OP_DROP);
-        builder.op(OP_1);
-        builder.op(OP_1);
-        builder.op(OP_EQUAL);
+        builder.data(heirKey.getPubKey());
         builder.op(OP_ENDIF);
+        builder.op(OP_CHECKSIG);
 
         return builder.build();
     }
 
-    private static byte[] encodeBip68Sequence(int blocks) {
-        int SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
-        if (blocks > SEQUENCE_LOCKTIME_MASK) throw new ScriptException(ScriptError.SCRIPT_ERR_UNSATISFIED_LOCKTIME, "Exceeded max number of blocks!");
-        ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
-        return buffer.putInt(blocks).array();
+    public static byte[] convertHexToByte(String hex) {
+        int len = hex.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    + Character.digit(hex.charAt(i+1), 16));
+        }
+        return data;
     }
 
     private static Coin getMaxBalanceToWithdrawExceptFee(Transaction tx, Coin balance, Wallet wallet) {
@@ -246,8 +198,7 @@ public class Inheritance {
     private static List<TransactionInput> getAllInputsToWithdrawFromInterimAddress(
             Collection<TransactionOutput> outputs,
             NetworkParameters networkParameters,
-            Script redeemScript,
-            int blocks
+            Script redeemScript
     ) {
         List<TransactionInput> inputs = new ArrayList<>();
 

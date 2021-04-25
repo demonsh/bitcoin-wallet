@@ -19,6 +19,7 @@ package de.schildbach.wallet.util;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.BlockChain;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.StoredBlock;
@@ -41,6 +42,7 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.UnreadableWalletException;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletExtension;
+import org.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,12 +60,12 @@ import java.util.concurrent.TimeUnit;
 import de.schildbach.wallet.Constants;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 
 public class InheritanceTest {
     final private int blocks = 6;
 
-//    private NetworkParameters networkParameters = TestNet3Params.get();
     private NetworkParameters networkParameters = RegTestParams.get();
     private SPVBlockStore spvBlockStore;
 
@@ -71,7 +73,13 @@ public class InheritanceTest {
     private WalletAppKit heirWalletAppKit;
 
     private Address ownerAddress;
+    private DeterministicKey ownerKey;
+    private ECKey ownerPubKey;
+
     private Address heirAddress;
+    private DeterministicKey heirKey;
+    private ECKey heirPubKey;
+
     private String artifactsFolderPath = "./tmp/bitcoinj/";
 
     private WalletAppKit initWallet(String walletName, String mnemonic) throws IOException {
@@ -201,8 +209,8 @@ public class InheritanceTest {
         path.add(new ChildNumber(0));
         path.add(new ChildNumber(0));
 
-        InheritanceTestUtils.runShellCommand("/usr/local/bin/docker-compose -f ./test/de/schildbach/wallet/util/docker-compose.yml down --remove-orphans");
-        InheritanceTestUtils.runShellCommand("/usr/local/bin/docker-compose -f ./test/de/schildbach/wallet/util/docker-compose.yml up -d");
+        InheritanceTestUtils.runShellCommand("/usr/local/bin/docker-compose -f ./test/de/schildbach/wallet/util/docker-compose.yml down --remove-orphans", true);
+        InheritanceTestUtils.runShellCommand("/usr/local/bin/docker-compose -f ./test/de/schildbach/wallet/util/docker-compose.yml up -d", true);
 
         TimeUnit.SECONDS.sleep(3);
 
@@ -216,16 +224,18 @@ public class InheritanceTest {
         String mnemonicOwner = "afraid hint enforce alert opinion wrong emotion volume reason ecology garlic galaxy";
         ownerWalletAppKit = initWallet("ownerRegtest", mnemonicOwner);
         Wallet ownerWallet = ownerWalletAppKit.wallet();
-        DeterministicKey ownerKey = ownerWallet.getKeyByPath(path);
+        ownerKey = ownerWallet.currentReceiveKey();
+        ownerPubKey = ECKey.fromPublicOnly(ownerKey.getPubKey());
         ownerAddress = Address.fromKey(networkParameters, ownerKey, Script.ScriptType.P2WPKH);
 
         String mnemonicHeir = "beef elbow expire soccer jar appear dentist below bulk runway invite clever";
         heirWalletAppKit = initWallet("heirRegtest", mnemonicHeir);
         Wallet heirWallet = heirWalletAppKit.wallet();
-        DeterministicKey heirKey = heirWallet.getKeyByPath(path);
+        heirKey = heirWallet.currentReceiveKey();
+        heirPubKey = ECKey.fromPublicOnly(heirKey.getPubKey());
         heirAddress = Address.fromKey(networkParameters, heirKey, Script.ScriptType.P2WPKH);
 
-        Address interimAddress = Inheritance.getInterimInheritanceAddressP2WSH(ownerAddress, heirAddress, blocks, ownerWallet);
+        Address interimAddress = Inheritance.getInterimInheritanceAddressP2WSH(ownerPubKey, heirPubKey, blocks, ownerWallet);
         ownerWallet.addWatchedAddress(interimAddress);
         heirWallet.addWatchedAddress(interimAddress);
     }
@@ -243,8 +253,8 @@ public class InheritanceTest {
 //        Address expectedAddress = Address.fromString(networkParameters, "tb1qnmsx8pey94d46twe4m3xtrgzynve979gj08r35u949smn990g9xqz73taq");
         Address expectedAddress = Address.fromString(networkParameters, "bcrt1qnmsx8pey94d46twe4m3xtrgzynve979gj08r35u949smn990g9xq08mdg6");
         Address actualAddress = Inheritance.getInterimInheritanceAddressP2WSH(
-                ownerAddress,
-                heirAddress,
+                ownerPubKey,
+                heirPubKey,
                 blocks,
                 ownerWalletAppKit.wallet()
         );
@@ -256,7 +266,7 @@ public class InheritanceTest {
         //TODO check if parameter of OP_CHECKSEQUENCEVERIFY (0xb2) should be 1 or more bytes (6 = 0x56 or 6 blocks = 0x06000000)
 //        String expectedRedeem = "6376A914C26DE6CA52B29CED22F81113B5AED98EC14587AE88AC670406000000B27576A91424E821FFF252985DC86845551FA99125FB9BCD7588AC68";
         String expectedRedeem = "6376A914C26DE6CA52B29CED22F81113B5AED98EC14587AE88AC670406000000B27576A91424E821FFF252985DC86845551FA99125FB9BCD7588AC68";
-        byte[] actualRedeemBytes = Inheritance.inheritanceScriptWithCSV(ownerAddress, heirAddress, 6).getProgram();
+        byte[] actualRedeemBytes = Inheritance.inheritanceScriptWithCSV(ownerKey, heirKey, 6).getProgram();
         StringBuilder sb = new StringBuilder();
         for (byte b : actualRedeemBytes) {
             sb.append(String.format("%02X", b));
@@ -272,7 +282,7 @@ public class InheritanceTest {
         Wallet wallet = ownerWalletAppKit.wallet();
         System.out.println(wallet.getBalance());
         Transaction tx = Inheritance.signInheritanceTx(
-                ownerAddress, heirAddress, blocks, ownerWalletAppKit.wallet()
+                ownerPubKey, heirPubKey, blocks, ownerWalletAppKit.wallet()
         );
         String actualHexTx = InheritanceTestUtils.convertByteToHex(tx.bitcoinSerialize());
 //        String expectedHexTx = "010000000001034095D19E21F3DFEE1E9573AC9B3ACE3C392CC69BE281310DFF923B665CF738410000000000FFFFFFFF7242D10B374BCB2850B7CC06170C2B93EBB6B7A3A1FF13362AA53B4BFE2A309B0000000000FFFFFFFF2CB7E97017416A4BFDAC6E757ABE3950477E907FDB23B4E97550FE93EE2F16E90000000000FFFFFFFF020606639B000000001600145C6D22EFE3C7B2C0168B85E87FD4AB6D013988B48E00AEE2020000002200209EE06387242D5B5D2DD9AEE2658D0224D992F8A893CE38D385A961B994AF414C024830450221009409A2BFC27599239F10E6A5A308EAAB5F4AA9FCCA58151A16879A6BF818861B022023E6301BF2D38CD5F1C10DDE88B85C87A725EC494A1E4082CBA451EE9BEB02350121023DBFFA8FF2FDFF7FE009D689967E0CE7AD3CB20C2D8967AB9833620CF46B257B0248304502210098F9EAE28D47B35688E1D000D57940365C37DC3885CECE6EECAD5F75BA8E2ACF02206D5A3957E5FD9258E946BCC18D4C38FCF0A9B9A20D12627E9CA1E094FD177F160121023DBFFA8FF2FDFF7FE009D689967E0CE7AD3CB20C2D8967AB9833620CF46B257B02473044022068D523A7196D40C84E27501ABB985851B29F4B9E8C1EE70A4C97D069D5A2558702206A68B555FC9C0564BF89AC9A8670F4E83A32D770B8D8F54D5AD53A4BCE4AEE020121023DBFFA8FF2FDFF7FE009D689967E0CE7AD3CB20C2D8967AB9833620CF46B257B00000000";
@@ -289,12 +299,12 @@ public class InheritanceTest {
 //        }
 
 
-        Transaction txOwner = Inheritance.getWithdrawTxFromInterimAddress(
-                ownerAddress,
-                heirAddress,
-                blocks,
-                ownerWalletAppKit.wallet()
-        );
+//        Transaction txOwner = Inheritance.getWithdrawTxFromInterimAddress(
+//                ownerAddress,
+//                heirAddress,
+//                blocks,
+//                ownerWalletAppKit.wallet()
+//        );
 
 //        Transaction txHeir = Inheritance.getWithdrawTxFromInterimAddress(
 //            ownerAddress,
@@ -303,7 +313,7 @@ public class InheritanceTest {
 //            heirWalletAppKit.wallet()
 //        );
 
-        Inheritance.broadcastTx(txOwner, ownerWalletAppKit.peerGroup());
+//        Inheritance.broadcastTx(txOwner, ownerWalletAppKit.peerGroup());
 //        Inheritance.broadcastTx(txHeir, heirWalletAppKit.peerGroup());
     }
 
@@ -312,29 +322,36 @@ public class InheritanceTest {
         Wallet ownerWallet = ownerWalletAppKit.wallet();
         Wallet heirWallet = heirWalletAppKit.wallet();
 
-        Transaction tx = Inheritance.signInheritanceTx(
-                ownerAddress, heirAddress, blocks, ownerWallet
+        Transaction txToInterimAddress = Inheritance.signInheritanceTx(
+                ownerPubKey, heirPubKey, blocks, ownerWallet
         );
-        Inheritance.broadcastTxViaSendRequest(tx, ownerWallet);
-//        System.out.println(tx.toString());
+//        Inheritance.broadcastTxViaSendRequest(txToInterimAddress, ownerWallet);
+        Inheritance.broadcastTx(txToInterimAddress, ownerWalletAppKit.peerGroup());
+
         InheritanceTestUtils.runShellCommand(
                 "docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass generatetoaddress "
-                            + blocks
+                            + (blocks - 1)
                             + " mmW7cFg5iVXmApyMGwnnvmnZeHLUL1K4tn",
                 false
         );
 
-        Transaction txOwner = Inheritance.getWithdrawTxFromInterimAddress(
-                ownerAddress, heirAddress,blocks, heirWallet
+        Transaction txFromInterimAddress = Inheritance.getWithdrawTxFromInterimAddress(
+                ownerKey, heirKey, blocks, ownerWallet, txToInterimAddress
         );
 
-//        System.out.println("Input 0 witness: " + txOwner.toString());
-        InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass decoderawtransaction " +
-            InheritanceTestUtils.convertByteToHex(txOwner.bitcoinSerialize()));
+//        System.out.println("Input 0 witness: " + txFromInterimAddress.toString());
+//        InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass decoderawtransaction " +
+//            InheritanceTestUtils.convertByteToHex(txFromInterimAddress.bitcoinSerialize()));
 
-//        Inheritance.broadcastTx(txOwner, ownerWalletAppKit.peerGroup());
-        InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass sendrawtransaction " +
-            InheritanceTestUtils.convertByteToHex(txOwner.bitcoinSerialize()));
+//        Inheritance.broadcastTx(txFromInterimAddress, ownerWalletAppKit.peerGroup());
+        String sendRawTxResult = InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass sendrawtransaction " +
+                InheritanceTestUtils.convertByteToHex(txFromInterimAddress.bitcoinSerialize()));
+        assertFalse(sendRawTxResult.contains("error message"));
+
         InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass generatetoaddress 1 mmW7cFg5iVXmApyMGwnnvmnZeHLUL1K4tn", false);
+
+        String mineToInheritanceAddressResult = InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass generatetoaddress 1 mmW7cFg5iVXmApyMGwnnvmnZeHLUL1K4tn", true);
+        String blockHash = new JSONArray(mineToInheritanceAddressResult).get(0).toString();
+        String blockInfo = InheritanceTestUtils.runShellCommand("docker exec --user bitcoin bitcoin-server bitcoin-cli -regtest -rpcuser=user -rpcpassword=pass getblock " + blockHash);
     }
 }

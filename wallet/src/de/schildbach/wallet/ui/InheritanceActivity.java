@@ -8,7 +8,6 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,18 +20,16 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LiveData;
 
-import org.bitcoinj.core.Address;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.wallet.Wallet;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.data.AppDatabase;
@@ -42,6 +39,8 @@ import de.schildbach.wallet.ui.scan.ScanActivity;
 import de.schildbach.wallet.util.CheatSheet;
 import de.schildbach.wallet.util.Inheritance;
 import de.schildbach.wallet.util.Qr;
+
+import static de.schildbach.wallet.util.Inheritance.convertHexToByte;
 
 public final class InheritanceActivity extends AbstractWalletActivity {
 
@@ -120,7 +119,8 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         address_qr.setImageBitmap(Qr.bitmap("My test"));
 
         //todo This address we should get by heir address QR scan
-        InheritanceEntity in = new InheritanceEntity("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv", "heirAddress");
+        //todo This public key should be get by heir address QR scan. Heir address is not needed
+        InheritanceEntity in = new InheritanceEntity("tb1qj6jh32uhuy6jn8muryl77pysqscy7cr86m5vxv", "heirAddress", "counterparty public key");
         inheritanceDao.insertOrUpdate(in);
 
         List<InheritanceEntity> all = inheritanceDao.getAll();
@@ -133,7 +133,7 @@ public final class InheritanceActivity extends AbstractWalletActivity {
         WalletApplication application = getWalletApplication();
         Wallet wallet = application.getWallet();
 
-        Address ownerAddress = wallet.currentReceiveAddress();
+        DeterministicKey ownerKey = wallet.currentReceiveKey();
 
         InheritanceEntity heirEntity = inheritanceDao
                 .getAll()
@@ -144,8 +144,9 @@ public final class InheritanceActivity extends AbstractWalletActivity {
 
         if (heirEntity != null) {
             try {
-                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirEntity.getAddress());
-                Transaction tx = Inheritance.signInheritanceTx(ownerAddress, heirAddress, 6, wallet);
+//                Address heirAddress = Address.fromString(Constants.NETWORK_PARAMETERS, heirEntity.getAddress());
+                ECKey heirKey = DeterministicKey.fromPublicOnly(convertHexToByte(heirEntity.getPubKey()));
+                Transaction tx = Inheritance.signInheritanceTx(ownerKey, heirKey, 6, wallet);
                 signedTx = Hex.toHexString(tx.bitcoinSerialize());
                 Toast.makeText(this, "Successfully signed inheritance transaction: " + signedTx.substring(0, 50) + "...", Toast.LENGTH_LONG).show();
             } catch (Exception exception) {
