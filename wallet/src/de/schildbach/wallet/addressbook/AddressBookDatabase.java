@@ -24,10 +24,15 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import de.schildbach.wallet.data.InheritanceDao;
+import de.schildbach.wallet.data.InheritanceEntity;
+import de.schildbach.wallet.data.InheritanceTxDao;
+import de.schildbach.wallet.data.TxEntity;
+
 /**
  * @author Andreas Schildbach
  */
-@Database(entities = { AddressBookEntry.class, InheritanceEntity.class }, version = 2, exportSchema = false)
+@Database(entities = { AddressBookEntry.class, InheritanceEntity.class, TxEntity.class}, version = 3, exportSchema = false)
 public abstract class AddressBookDatabase extends RoomDatabase {
     public abstract AddressBookDao addressBookDao();
     public abstract InheritanceDao inheritanceDao();
@@ -41,7 +46,10 @@ public abstract class AddressBookDatabase extends RoomDatabase {
             synchronized (AddressBookDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(), AddressBookDatabase.class, DATABASE_NAME)
-                            .addMigrations(MIGRATION_1_2).allowMainThreadQueries().build();
+                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_2_3)
+                            .addMigrations(MIGRATION_3_4)
+                            .allowMainThreadQueries().build();
                 }
             }
         }
@@ -61,6 +69,16 @@ public abstract class AddressBookDatabase extends RoomDatabase {
     };
 
     private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(final SupportSQLiteDatabase database) {
+            database.execSQL(
+                    "CREATE TABLE inheritance (address TEXT NOT NULL, label TEXT, PRIMARY KEY(address))");
+            database.execSQL(
+                    "CREATE TABLE inheritanceTx (tx TEXT NOT NULL, label TEXT, PRIMARY KEY(tx))");
+        }
+    };
+
+    private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
         public void migrate(final SupportSQLiteDatabase database) {
             database.execSQL(

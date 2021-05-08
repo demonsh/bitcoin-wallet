@@ -90,7 +90,7 @@ public final class InheritanceAddressFragment extends Fragment {
             @Override
             public void onEvent(final Void v) {
                 final Address address = viewModel.currentAddress.getValue();
-                WalletAddressDialogFragment.show(getParentFragmentManager(), address, viewModel.ownName.getValue());
+               // WalletAddressDialogFragment.show(getParentFragmentManager(), address, viewModel.ownName.getValue());
                 log.info("Current address enlarged: {}", address);
             }
         });

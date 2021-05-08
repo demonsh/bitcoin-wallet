@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;
 import de.schildbach.wallet.data.InheritanceTxDao;
 import de.schildbach.wallet.data.TxEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -46,7 +46,7 @@ public class InheritanceHeirActivity extends AbstractWalletActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance_heir);
 
-        txDao = AppDatabase.getDatabase(this.getBaseContext()).txDao();
+        txDao = AddressBookDatabase.getDatabase(this.getBaseContext()).txDao();
 
         txList = txDao.getAll();
 

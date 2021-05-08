@@ -32,7 +32,7 @@ import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.WalletApplication;
 import de.schildbach.wallet.data.AbstractWalletLiveData;
-import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -71,7 +71,7 @@ public class InheritanceOwnerDetailsActivity extends AbstractWalletActivity {
 
         address = intent.getStringExtra("address");
 
-        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+        this.inheritanceDao = AddressBookDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
 
         InheritanceEntity current = inheritanceDao.get(address);
 

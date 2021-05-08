@@ -11,7 +11,7 @@ import android.widget.Toast;
 import org.bitcoinj.wallet.Wallet;
 
 import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;
 import de.schildbach.wallet.data.InheritanceTxDao;
 import de.schildbach.wallet.data.TxEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -31,7 +31,7 @@ public class NewHairTx extends AbstractWalletActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_hair_tx);
 
-        this.txDao = AppDatabase.getDatabase(this.getBaseContext()).txDao();
+        this.txDao = AddressBookDatabase.getDatabase(this.getBaseContext()).txDao();
 
         ownerAddressView = findViewById(R.id.ownerAddress);
         blocksView = findViewById(R.id.blocks);
@@ -49,7 +49,7 @@ public class NewHairTx extends AbstractWalletActivity {
         txDao.insertOrUpdate(txEntity);
 
         Wallet wallet = getWalletApplication().getWallet();
-        wallet.addWatchedAddress()
+        //wallet.addWatchedAddress();
 
         Toast.makeText(this, "Transaction added", Toast.LENGTH_LONG);
     }

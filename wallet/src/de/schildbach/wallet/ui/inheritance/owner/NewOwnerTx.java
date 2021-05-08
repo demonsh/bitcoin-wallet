@@ -7,7 +7,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import de.schildbach.wallet.R;
-import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -22,7 +22,7 @@ public class NewOwnerTx extends AbstractWalletActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_owner_tx);
 
-        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+        this.inheritanceDao = AddressBookDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
 
     }
 

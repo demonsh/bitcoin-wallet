@@ -29,7 +29,7 @@ import java.util.List;
 import de.schildbach.wallet.Constants;
 import de.schildbach.wallet.R;
 import de.schildbach.wallet.WalletApplication;
-import de.schildbach.wallet.data.AppDatabase;
+import de.schildbach.wallet.addressbook.AddressBookDatabase;;
 import de.schildbach.wallet.data.InheritanceDao;
 import de.schildbach.wallet.data.InheritanceEntity;
 import de.schildbach.wallet.ui.AbstractWalletActivity;
@@ -56,7 +56,7 @@ public final class InheritanceOwnerActivity extends AbstractWalletActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inheritance);
 
-        this.inheritanceDao = AppDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
+        this.inheritanceDao = AddressBookDatabase.getDatabase(this.getBaseContext()).inheritanceDao();
 
         final ListView listview = (ListView) findViewById(R.id.list_heir);
 
